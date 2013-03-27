@@ -25,12 +25,15 @@
 			<to type="ftp"  serverid="-3">
 				<path>var path = "weblogic/test/${1}/${2}";</path>
 			</to>
-			<to type="ftp"  serverid="-1">
+			<!-- move 针对from -->
+			<move>
 				<path>var path = "offline/offlineBak/send/${1}/"+getTodayDate()+"/${2}";</path>
-			</to>
+			</move>
+			<!-- 
 			<delete type="ftp" serverid="-1">
 				<path>var path = "qcbank/(.*?)/acc/(.*?)";</path>
 			</delete>
+			 -->
 		</task>
 		<task id="2"  group="1" desc="测试用" cron="false">
 			<!-- get 获取  put 上传-->

@@ -7,6 +7,7 @@ import com.david4.common.model.TaskModel;
 public class FileTransTaskModel extends TaskModel {
 	private From from;
 	private List<To> to;
+	private Move move;
 	private List<Delete> delete;
 
 	public class From {
@@ -93,6 +94,19 @@ public class FileTransTaskModel extends TaskModel {
 					+ ", path=" + path + "]";
 		}
 	}
+	public class Move{
+		private String path;
+		public String getPath() {
+			return path;
+		}
+		public void setPath(String path) {
+			this.path = path;
+		}
+		@Override
+		public String toString() {
+			return "Move [path=" + path + "]";
+		}
+	}
 	public From getFrom() {
 		return from;
 	}
@@ -110,5 +124,11 @@ public class FileTransTaskModel extends TaskModel {
 	}
 	public void setDelete(List<Delete> delete) {
 		this.delete = delete;
+	}
+	public Move getMove() {
+		return move;
+	}
+	public void setMove(Move move) {
+		this.move = move;
 	}
 }

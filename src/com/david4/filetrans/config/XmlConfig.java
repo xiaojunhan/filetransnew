@@ -22,6 +22,7 @@ import com.david4.common.model.TaskModel;
 import com.david4.filetrans.model.FileTransTaskModel;
 import com.david4.filetrans.model.FileTransTaskModel.Delete;
 import com.david4.filetrans.model.FileTransTaskModel.From;
+import com.david4.filetrans.model.FileTransTaskModel.Move;
 import com.david4.filetrans.model.FileTransTaskModel.To;
 import com.david4.filetrans.model.ServerConfig;
 
@@ -144,33 +145,38 @@ public class XmlConfig extends  GlobalBase implements TaskConfig {
 			model.setNextId(nextId);
 			//from 若存在多个from只取第一个
 			Element from = task.element("from");
-			if(from==null){
-				logger.error("task from null");
-				continue;
+			if(from!=null){
+				String type = from.attributeValue("type");
+				String serverid = from.attributeValue("serverid");
+				String path = from.elementTextTrim("path");
+				From f = new FileTransTaskModel().new From();
+				f.setPath(path);
+				f.setType(type);
+				f.setServerid(serverid);
+				model.setFrom(f);
+				//to
+				List<To> tolist = new ArrayList<To>();
+				for (Iterator<?> j = task.elementIterator("to"); j.hasNext();) {
+					Element to = (Element) j.next();
+					String type1 = to.attributeValue("type");
+					String serverid1 = to.attributeValue("serverid");
+					String path1 = to.elementTextTrim("path");
+					To t = new FileTransTaskModel().new To();
+					t.setPath(path1);
+					t.setType(type1);
+					t.setServerid(serverid1);
+					tolist.add(t);
+				}
+				model.setTo(tolist);
+				//move
+				Element move = task.element("move");
+				String movePath = move.elementTextTrim("path");
+				Move m = new FileTransTaskModel().new Move();
+				m.setPath(movePath);
+				model.setMove(m);
 			}
-			String type = from.attributeValue("type");
-			String serverid = from.attributeValue("serverid");
-			String path = from.elementTextTrim("path");
-			From f = new FileTransTaskModel().new From();
-			f.setPath(path);
-			f.setType(type);
-			f.setServerid(serverid);
-			model.setFrom(f);
-			//to
-			List<To> tolist = new ArrayList<To>();
-			for (Iterator<?> j = task.elementIterator("to"); j.hasNext();) {
-				Element to = (Element) j.next();
-				String type1 = to.attributeValue("type");
-				String serverid1 = to.attributeValue("serverid");
-				String path1 = to.elementTextTrim("path");
-				To t = new FileTransTaskModel().new To();
-				t.setPath(path1);
-				t.setType(type1);
-				t.setServerid(serverid1);
-				tolist.add(t);
-			}
-			model.setTo(tolist);
 			//delete
+			//delete 可以不依赖from单独存在
 			List<Delete> deletelist = new ArrayList<Delete>();
 			for (Iterator<?> j = task.elementIterator("delete"); j.hasNext();) {
 				Element delete = (Element) j.next();
