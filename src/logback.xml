@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <timestamp key="byDay" datePattern="yyyyMMdd"/>
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender" >
+        <encoder>
+      		<pattern>%date %level [%thread] [%class:%line] %msg%n</pattern>
+    	</encoder>
+    </appender>
+    <appender name="File" class="ch.qos.logback.core.FileAppender">
+        <file>E:\workspace\filetrans\log\log-${byDay}.log</file>
+        <encoder>
+      		<pattern>%date %level [%thread] [%class:%line] %msg%n</pattern>
+    	</encoder>
+    </appender>
+    
+    <appender name="SimpleFile" class="ch.qos.logback.core.FileAppender">
+        <file>E:\workspace\filetrans\log\logdb-${byDay}.log</file>
+        <encoder>
+      		<pattern>%date %msg%n</pattern>
+    	</encoder>
+    </appender>
+    
+    <logger name="com.david4.console.TaskInfo" level="INFO" additivity="false">
+		<appender-ref ref="SimpleFile"/>
+	</logger>
+
+    <root level="INFO">
+        <appender-ref ref="Console"/>
+        <appender-ref ref="File"/>
+    </root>
+    
+
+</configuration>

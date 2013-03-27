@@ -1,0 +1,45 @@
+
+部署时要修改的地方
+1、logback.xml日志位置
+2、tasks.xml local_path_temp地址
+
+配置文件路径时注意
+路径使用js脚本配置
+<frompath>
+			var frompath = "test/offlinefiles/send/(\\d{11})/((FH|SS|SN|SR|ER|BL)(\\w{34}|\\w{23})$)";
+</frompath>
+1、<frompath>为必须项，<frompath>中var变量名必须为frompath。
+2、文件路径从FTP跟路径开始，并且不以"/"开始，如上面test前面没有"/"。
+3、frompath文件路径中支持正则，正则是让java处理的，要满足java正则的规范，需注意转义符。路径中不需要()的时候禁止使用()。
+   ()中取到的值会传递给frompathbak和topath。
+4、路径一直详细到文件级，路径不支持配置到文件夹
+如test/offlinefiles/(.*?)指的是test/offlinefiles/下所有文件，不包括test/offlinefiles/下的文件夹及其文件夹下内容。
+
+<frompathbak>
+			var frompathbak = "test/offlinebak/send/${1}/"+getTodayDate()+"/${2}";
+			function getTodayDate(){
+				var myDate = new Date();
+				var year = myDate.getFullYear();
+				var month = myDate.getMonth();
+				var da = myDate.getDate(); 
+				month = parseInt(month)+1;
+				month = String(month);
+				if(month.length==1){
+					month = "0"+month;
+				}
+				da = String(da);
+				if(da.length==1){
+					da = "0"+da;
+				}
+				return String(year)+month+da;
+			}
+</frompathbak>
+1、<frompathbak>为可选项，如果获取文件后需要将文件备份到其他目录则配置此项。
+       目前仅支持将文件备份在和frompath同一台服务器，不支持备份到其他FTP服务器(此项功能以后需要的话可以添加)。
+      若获取完文件后不需要备份到其他目录,则frompathbak不需要,可以不需要frompathbak节点或者将frompathbak节点内容设为空如<frompathbak></frompathbak>
+
+
+
+支持
+QQ:526858467
+手机:13812042761
