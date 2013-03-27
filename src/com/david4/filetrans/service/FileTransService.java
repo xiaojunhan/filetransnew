@@ -29,6 +29,7 @@ public class FileTransService extends BaseService{
 	@Qualifier("taskConfig")
 	private TaskConfig taskConfig;
 	public void doTask(FileTransTaskModel taskModel) throws Exception{
+		//TODO没有from也能继续
 		From from = taskModel.getFrom();
 		String fromPathTemp = from.getPath();
 		if(fromPathTemp==null || fromPathTemp.trim().length()==0){
