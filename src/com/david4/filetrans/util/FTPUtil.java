@@ -29,21 +29,22 @@ import com.david4.filetrans.model.FileTransTaskModel.To;
 import com.david4.filetrans.model.ServerConfig;
 
 @Component
-public class FTPUtil implements FileTransUtil{
-	protected  static final Logger logger = LoggerFactory.getLogger(FTPUtil.class);
-	
+public class FTPUtil implements FileTransUtil {
+	protected static final Logger logger = LoggerFactory
+			.getLogger(FTPUtil.class);
+
 	@Autowired
 	@Qualifier("taskConfig")
 	private TaskConfig taskConfig;
-	
+
 	@Override
 	public List<String> getPathList(From from) throws Exception {
 		String path = from.getPath();
-		FTPClient client  = null;
-		try{
-			client  = getFtpClient(from.getServerid());
+		FTPClient client = null;
+		try {
+			client = getFtpClient(from.getServerid());
 			return getFileList(path, client);
-		}finally{
+		} finally {
 			close(client);
 		}
 	}
@@ -51,26 +52,26 @@ public class FTPUtil implements FileTransUtil{
 	@Override
 	public void delete(Delete delete, String deletePath) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void get(From from, String fromPath, String localPath)
 			throws Exception {
-		FTPClient client  = getFtpClient(from.getServerid());
+		FTPClient client = getFtpClient(from.getServerid());
 		File file = new File(localPath);
 		FileOutputStream fos = new FileOutputStream(file);
-		try{
+		try {
 			boolean b = client.retrieveFile(fromPath, fos);
-			if(!b){
-				logger.warn("get file error,fromPath="+fromPath);
+			if (!b) {
+				logger.warn("get file error,fromPath=" + fromPath);
 				return;
 			}
-		}finally{
-			try{
+		} finally {
+			try {
 				fos.close();
-			}catch(Exception e){
-				
+			} catch (Exception e) {
+
 			}
 			close(client);
 		}
@@ -78,75 +79,84 @@ public class FTPUtil implements FileTransUtil{
 
 	@Override
 	public void put(To to, String toPath, String localPath) throws Exception {
-		FTPClient client  = getFtpClient(to.getServerid());
+		FTPClient client = getFtpClient(to.getServerid());
 		mkdirs(getFtpDir(toPath), client);
 		File file = new File(localPath);
 		FileInputStream fis = new FileInputStream(file);
-		try{
+		try {
 			boolean b = client.storeFile(toPath, fis);
-			if(!b){
-				logger.warn("put file error,topath="+toPath);
+			if (!b) {
+				logger.warn("put file error,topath=" + toPath);
 				return;
 			}
-		}finally{
-			try{
+		} finally {
+			try {
 				fis.close();
-			}catch(Exception e){
-				
+			} catch (Exception e) {
+
 			}
 			close(client);
 		}
 	}
 
-	
 	/**
-	 * 获取FTP文件列表
-	 * path支持正则表达式
-	 * 如test/offlinefiles/send/(\\d{11})/((FH|SS|SN|SR|ER|BL)\\w{34}|(FH|SS|SN|SR|ER|BL)\\w{23})
+	 * 获取FTP文件列表 path支持正则表达式
+	 * 如test/offlinefiles/send/(\\d{11})/((FH|SS|SN|SR|ER|BL
+	 * )\\w{34}|(FH|SS|SN|SR|ER|BL)\\w{23})
+	 * 
 	 * @param path
 	 * @param client
 	 * @return
 	 * @throws IOException
 	 */
-	public static List<String> getFileList(String path,FTPClient client) throws IOException{
+	public static List<String> getFileList(String path, FTPClient client)
+			throws IOException {
 		List<PathModel> list = FileUtil.getPathSegment(path);
-		return getFileList(list,0,client);
+		return getFileList(list, 0, client);
 	}
-	public static List<String> getFileList(List<PathModel> list,int index,FTPClient client) throws IOException{
-		//退出
-		if(list==null || index < 0 || index>=list.size()){
+
+	public static List<String> getFileList(List<PathModel> list, int index,
+			FTPClient client) throws IOException {
+		// 退出
+		if (list == null || index < 0 || index >= list.size()) {
 			return null;
 		}
-		//client.changeWorkingDirectory(rootPath);
+		// client.changeWorkingDirectory(rootPath);
 		PathModel pm = list.get(index);
-		//getFile
+		// getFile
 		List<String> pathList = new ArrayList<String>();
-		if(index == list.size()-1){
-			logger.debug("file==pm.getPath()=="+pm.getPath()+"==pm.getNext()=="+pm.getNext());
-			FTPFile[] ftpFileArr = client.listFiles(pm.getPath(), new MyFTPFileFilter(pm.getNext()));
-			if(ftpFileArr!=null && ftpFileArr.length>0){
-				for(FTPFile f:ftpFileArr){
+		if (index == list.size() - 1) {
+			logger.debug("file==pm.getPath()==" + pm.getPath()
+					+ "==pm.getNext()==" + pm.getNext());
+			FTPFile[] ftpFileArr = client.listFiles(pm.getPath(),
+					new MyFTPFileFilter(pm.getNext()));
+			if (ftpFileArr != null && ftpFileArr.length > 0) {
+				for (FTPFile f : ftpFileArr) {
 					String name = f.getName();
-					String tempPath = pm.getPath()+"/"+name;
-					tempPath = new String(tempPath.getBytes("UTF-8"),"ISO-8859-1");
+					String tempPath = pm.getPath() + "/" + name;
+					tempPath = new String(tempPath.getBytes("UTF-8"),
+							"ISO-8859-1");
 					pathList.add(tempPath);
 				}
 			}
 			return pathList;
-		} 
-		if(index<list.size()-1){
-			//get dir
-			logger.debug("dir==pm.getPath()=="+pm.getPath()+"==pm.getNext()=="+pm.getNext());
+		}
+		if (index < list.size() - 1) {
+			// get dir
+			logger.debug("dir==pm.getPath()==" + pm.getPath()
+					+ "==pm.getNext()==" + pm.getNext());
 			FTPFile[] ftpFileArr = client.listDirectories(pm.getPath());
-			if(ftpFileArr!=null && ftpFileArr.length>0){
-				for(FTPFile f:ftpFileArr){
-					Pattern p = Pattern.compile("^"+pm.getNext()+"$");
+			if (ftpFileArr != null && ftpFileArr.length > 0) {
+				for (FTPFile f : ftpFileArr) {
+					Pattern p = Pattern.compile("^" + pm.getNext() + "$");
 					Matcher m = p.matcher(f.getName());
-					if(m.find()){
+					if (m.find()) {
 						String dirName = f.getName();
-						list.get(index+1).setPath(pm.getPath()+"/"+dirName);
-						List<String> tempList = getFileList(list,index+1,client);
-						if(tempList!=null && tempList.size()>0){
+						list.get(index + 1).setPath(
+								pm.getPath() + "/" + dirName);
+						List<String> tempList = getFileList(list, index + 1,
+								client);
+						if (tempList != null && tempList.size() > 0) {
 							pathList.addAll(tempList);
 						}
 					}
@@ -156,71 +166,80 @@ public class FTPUtil implements FileTransUtil{
 		}
 		return null;
 	}
-	public FTPClient getFtpClient(String serverId) throws Exception{
-		//String serverId = from.getServerid();
-		ServerConfig config =  taskConfig.getServerConfig(serverId);
-		FTPClient client =  getFtpClient(config);
-		if(client==null){
-			throw new Exception("connect and login ftp error,"+config);
+
+	public FTPClient getFtpClient(String serverId) throws Exception {
+		// String serverId = from.getServerid();
+		ServerConfig config = taskConfig.getServerConfig(serverId);
+		FTPClient client = getFtpClient(config);
+		if (client == null) {
+			throw new Exception("connect and login ftp error," + config);
 		}
 		return client;
 	}
-	public  FTPClient getFtpClient(ServerConfig ftpconfig){
-		if(ftpconfig==null){
+
+	public FTPClient getFtpClient(ServerConfig ftpconfig) {
+		if (ftpconfig == null) {
 			logger.warn("ftpconfig is null");
 			return null;
 		}
 		return getFtpClient(ftpconfig.getHost(), ftpconfig.getPort(),
 				ftpconfig.getUserName(), ftpconfig.getPassword());
 	}
+
 	/**
 	 * 获取获得FTP客户端
+	 * 
 	 * @param host
 	 * @param port
 	 * @param userName
 	 * @param password
 	 * @return
 	 */
-	public static FTPClient getFtpClient(String host,int port,String userName,String password){
+	public static FTPClient getFtpClient(String host, int port,
+			String userName, String password) {
 		FTPClient ftp = new FTPClient();
 		try {
 			ftp.connect(host, port);
 		} catch (Exception e) {
-			logger.warn("连接FTP失败host="+host+",port="+port+","+e.getMessage());
+			logger.warn("连接FTP失败host=" + host + ",port=" + port + ","
+					+ e.getMessage());
 			return null;
-		} 
+		}
 		int reply = ftp.getReplyCode();
-		if (!FTPReply.isPositiveCompletion(reply)){
+		if (!FTPReply.isPositiveCompletion(reply)) {
 			try {
 				ftp.disconnect();
 			} catch (Exception e) {
 				logger.warn(e.getMessage());
 			}
-			logger.warn("FTP server1 refused connection.host="+host+",port="+port);
+			logger.warn("FTP server1 refused connection.host=" + host
+					+ ",port=" + port);
 			return null;
-        }
+		}
 		try {
 			boolean b = ftp.login(userName, password);
-			if(!b){
-				logger.warn("loginFTP失败host="+host+",port="+port);
+			if (!b) {
+				logger.warn("loginFTP失败host=" + host + ",port=" + port);
 				return null;
 			}
 		} catch (IOException e) {
-			logger.warn("loginFTP失败host="+host+",port="+port+","+e.getMessage());
+			logger.warn("loginFTP失败host=" + host + ",port=" + port + ","
+					+ e.getMessage());
 			return null;
 		}
 		ftp.setControlEncoding("UTF-8");
 		ftp.setConnectTimeout(10000);
 		return ftp;
 	}
-	
+
 	public static void mkdirs(String dir, FTPClient ftp) throws IOException {
-		if(dir==null){
+		if (dir == null) {
 			return;
 		}
 		dir = dir.replaceAll("/+", "/");
-		String sdir = ftp.printWorkingDirectory().replaceAll("\"", "");;
-		//目录已存在，直接返回
+		String sdir = ftp.printWorkingDirectory().replaceAll("\"", "");
+		;
+		// 目录已存在，直接返回
 		boolean result = ftp.changeWorkingDirectory(dir);
 		if (result) {
 			ftp.changeWorkingDirectory(sdir);
@@ -261,18 +280,21 @@ public class FTPUtil implements FileTransUtil{
 		}
 		ftp.changeWorkingDirectory(sdir);
 	}
-	public static String getFtpDir(String path) throws UnsupportedEncodingException{
-		//path = getFtpFile(rootPath, path);
-		path = path.substring(0,path.lastIndexOf("/"));
+
+	public static String getFtpDir(String path)
+			throws UnsupportedEncodingException {
+		// path = getFtpFile(rootPath, path);
+		path = path.substring(0, path.lastIndexOf("/"));
 		return path;
 	}
-	
+
 	/**
 	 * 关闭FTP关闭
+	 * 
 	 * @param ftp
 	 */
-	public static void close(FTPClient ftp){
-		if(ftp!=null && ftp.isConnected()){
+	public static void close(FTPClient ftp) {
+		if (ftp != null && ftp.isConnected()) {
 			try {
 				ftp.logout();
 			} catch (IOException e) {
@@ -289,15 +311,12 @@ public class FTPUtil implements FileTransUtil{
 	@Override
 	public void move(ServerConfig serverConfig, String fromPath, String toPath)
 			throws Exception {
-		FTPClient client  = null;
-		try{
-			client  = getFtpClient(serverConfig);
+		FTPClient client = null;
+		try {
+			client = getFtpClient(serverConfig);
 			client.rename(fromPath, toPath);
-			
-			//client.
-		}finally{
+		} finally {
 			close(client);
 		}
-		
 	}
 }

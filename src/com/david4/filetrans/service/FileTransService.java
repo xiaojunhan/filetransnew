@@ -19,6 +19,7 @@ import com.david4.filetrans.config.TaskConfig;
 import com.david4.filetrans.model.FileTransTaskModel;
 import com.david4.filetrans.model.FileTransTaskModel.Delete;
 import com.david4.filetrans.model.FileTransTaskModel.From;
+import com.david4.filetrans.model.FileTransTaskModel.Move;
 import com.david4.filetrans.model.FileTransTaskModel.To;
 import com.david4.filetrans.model.ServerConfig;
 import com.david4.filetrans.util.FileTransUtil;
@@ -28,9 +29,18 @@ public class FileTransService extends BaseService{
 	@Autowired
 	@Qualifier("taskConfig")
 	private TaskConfig taskConfig;
+	/**
+	 * 
+	 * 当前版本不处理delete
+	 * @param taskModel
+	 * @throws Exception
+	 */
 	public void doTask(FileTransTaskModel taskModel) throws Exception{
-		//TODO没有from也能继续
+		//dofrom
 		From from = taskModel.getFrom();
+		if(from == null){
+			throw new Exception("from model null");
+		}
 		String fromPathTemp = from.getPath();
 		if(fromPathTemp==null || fromPathTemp.trim().length()==0){
 			throw new Exception("fromPath null,fromPath="+fromPathTemp);
@@ -40,39 +50,22 @@ public class FileTransService extends BaseService{
 			throw new Exception("fromPath null,fromPath="+fromPathTemp);
 		}
 		from.setPath(fromPathTemp);
-		
 		List<String> list= getPathList(from);
 		if(list==null || list.size()==0){
 			throw new FromFileEmptyException("from file empty");
 		}
+		//doto
 		List<To> toList = taskModel.getTo();
 		if(toList!=null && toList.size()>0){
-			//判断是否需要下载到本地
-			//若tolist中serverid、type和from中一致，不需要下载
-			boolean needDown = false;
-			for(To to:toList){
-				if(!to.getServerid().equals(from.getServerid()) || !to.getType().equals(from.getType())){
-					needDown  = true;
-					break;
-				}
-			}
-			
 			for(String fromPath:list){
-				System.out.println("fromPath="+fromPath);
 				String tempFileName = getTempFileName();
 				String localPath = getLOCAL_PATH_TEMP()+tempFileName;
-				if(needDown){
-					download(from,fromPath,localPath);
-				}
+				//下载到本地
+				download(from,fromPath,localPath);
 				for(To to:toList){
 					String toPath = getToPath(fromPath, to.getPath(), from.getPath());
 					try{
-						if(to.getServerid().equals(from.getServerid()) && to.getType().equals(from.getType())){
-							//在同一台服务器上
-							move(from,fromPath,toPath);
-						}else{
-							fileTrans(localPath,to,toPath);
-						}
+						fileTrans(localPath,to,toPath);
 					}catch(Exception e){
 						String toServerId = to.getServerid();
 						ServerConfig serverConfig = taskConfig.getServerConfig(toServerId);
@@ -87,22 +80,33 @@ public class FileTransService extends BaseService{
 					}
 				}
 				//都处理完后删除临时文件
-				if(needDown){
-					File file = new File(localPath);
-					file.delete();
-				}
+				File file = new File(localPath);
+				file.delete();
 			}
 		}
-
-		List<Delete> deleteList = taskModel.getDelete();
-		if(deleteList!=null && deleteList.size()>0){
-			for(Delete delete:deleteList){
+		//domove
+		Move move = taskModel.getMove();
+		if(move!=null){
+			String movePath = move.getPath();
+			if(movePath!=null && movePath.trim().length()>0){
 				for(String fromPath:list){
-					delete(from,delete,fromPath);				
+					String movePathTemp = getToPath(fromPath, movePath, from.getPath());
+					move(from, fromPath, movePathTemp);
 				}
 			}
 		}
 	}
+	
+//	public void doDelete(List<String> list,FileTransTaskModel taskModel,From from) throws Exception{
+//		List<Delete> deleteList = taskModel.getDelete();
+//		if(deleteList!=null && deleteList.size()>0){
+//			for(Delete delete:deleteList){
+//				for(String fromPath:list){
+//					delete(from,delete,fromPath);				
+//				}
+//			}
+//		}
+//	}
 	/**
 	 * 获取来源文件列表 
 	 * @param from
