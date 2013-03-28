@@ -63,137 +63,161 @@ public class XmlConfig extends  GlobalBase implements TaskConfig {
 			return;
 		}
 		try{
-			doinit();
+			doInitTask();
+			doInitUser();
 		}catch(Exception e){
 			logger.error("config init error,"+e.getMessage());
+			e.printStackTrace();
 		}finally{
 			initFlag.set(true);
 			lock.unlock();
 		}
 	}
-	public void doinit() throws IOException, DocumentException{
-		logger.info("config init");
-		ClassPathResource fsr =new ClassPathResource("tasks.xml");
-		InputStream is = fsr.getInputStream();
-		SAXReader saxReader = new SAXReader();
-		Document document = saxReader.read(is);
-		Element root = document.getRootElement();
-		Element common = root.element("common");
-		//参数MAP
-		Element params = common.element("params");
-		if(params!=null){
-			for (Iterator<?> i = params.elementIterator(); i.hasNext();) {
-				Element element = (Element) i.next();
-				logger.info(element.getName()+"=="+element.getTextTrim());
-				parameterMap.put(element.getName(), element.getTextTrim());
+	public void doInitTask() throws IOException, DocumentException{
+		InputStream is = null;
+		try{
+			logger.info("task config init");
+			ClassPathResource fsr =new ClassPathResource("tasks.xml");
+			is = fsr.getInputStream();
+			SAXReader saxReader = new SAXReader();
+			Document document = saxReader.read(is);
+			Element root = document.getRootElement();
+			Element common = root.element("common");
+			//参数MAP
+			Element params = common.element("params");
+			if(params!=null){
+				for (Iterator<?> i = params.elementIterator(); i.hasNext();) {
+					Element element = (Element) i.next();
+					logger.info(element.getName()+"=="+element.getTextTrim());
+					parameterMap.put(element.getName(), element.getTextTrim());
+				}
 			}
-		}
-		//server map
-		Element servers = common.element("servers");
-		if(servers!=null){
-			for (Iterator<?> i = servers.elementIterator("servergroup"); i.hasNext();) {
-				Element element = (Element) i.next();
-				if(element!=null){
-					for (Iterator<?> j = element.elementIterator("server"); j.hasNext();) {
-						Element server = (Element) j.next();
-						if(server!=null){
-							String id = server.attribute("id").getValue();
-							String host = server.element("host").getTextTrim();
-							String port = server.element("port").getTextTrim();
-							String name = server.element("name").getTextTrim();
-							String password = server.element("password").getTextTrim();
-							int p = 0;
-							try{
-								p = Integer.parseInt(port);
-							}catch(Exception e){
-								logger.warn("port config exception,port="+port);
-								continue;
+			//server map
+			Element servers = common.element("servers");
+			if(servers!=null){
+				for (Iterator<?> i = servers.elementIterator("servergroup"); i.hasNext();) {
+					Element element = (Element) i.next();
+					if(element!=null){
+						for (Iterator<?> j = element.elementIterator("server"); j.hasNext();) {
+							Element server = (Element) j.next();
+							if(server!=null){
+								String id = server.attribute("id").getValue();
+								String host = server.element("host").getTextTrim();
+								String port = server.element("port").getTextTrim();
+								String name = server.element("name").getTextTrim();
+								String password = server.element("password").getTextTrim();
+								int p = 0;
+								try{
+									p = Integer.parseInt(port);
+								}catch(Exception e){
+									logger.warn("port config exception,port="+port);
+									continue;
+								}
+								ServerConfig config = new ServerConfig();
+								config.setHost(host);
+								config.setPort(p);
+								config.setUserName(name);
+								config.setPassword(password);
+								logger.info(id+"=="+config);
+								serverConfigMap.put(id, config);
 							}
-							ServerConfig config = new ServerConfig();
-							config.setHost(host);
-							config.setPort(p);
-							config.setUserName(name);
-							config.setPassword(password);
-							logger.info(id+"=="+config);
-							serverConfigMap.put(id, config);
 						}
 					}
 				}
 			}
-		}
-		//task map
-		Element tasks = root.element("tasks");
-		if(tasks==null){
-			return;
-		}
-		for (Iterator<?> i = tasks.elementIterator("task"); i.hasNext();) {
-			Element task = (Element) i.next();
-			String id = task.attributeValue("id");
-			if(id==null){
-				logger.error("task id null");
-				continue;
+			//task map
+			Element tasks = root.element("tasks");
+			if(tasks==null){
+				return;
 			}
-			String group = task.attributeValue("group");
-			String desc = task.attributeValue("desc");
-			String cron = task.attributeValue("cron");
-			String nextId = task.attributeValue("nextId");
-			FileTransTaskModel model = new FileTransTaskModel();
-			model.setId(id);
-			model.setDesc(desc);
-			model.setGroup(group);
-			model.setCron(cron);
-			model.setNextId(nextId);
-			//from 若存在多个from只取第一个
-			Element from = task.element("from");
-			if(from!=null){
-				String type = from.attributeValue("type");
-				String serverid = from.attributeValue("serverid");
-				String path = from.elementTextTrim("path");
-				From f = new FileTransTaskModel().new From();
-				f.setPath(path);
-				f.setType(type);
-				f.setServerid(serverid);
-				model.setFrom(f);
-				//to
-				List<To> tolist = new ArrayList<To>();
-				for (Iterator<?> j = task.elementIterator("to"); j.hasNext();) {
-					Element to = (Element) j.next();
-					String type1 = to.attributeValue("type");
-					String serverid1 = to.attributeValue("serverid");
-					String path1 = to.elementTextTrim("path");
-					To t = new FileTransTaskModel().new To();
-					t.setPath(path1);
-					t.setType(type1);
-					t.setServerid(serverid1);
-					tolist.add(t);
+			for (Iterator<?> i = tasks.elementIterator("task"); i.hasNext();) {
+				Element task = (Element) i.next();
+				String id = task.attributeValue("id");
+				if(id==null){
+					logger.error("task id null");
+					continue;
 				}
-				model.setTo(tolist);
-				//move
-				Element move = task.element("move");
-				String movePath = move.elementTextTrim("path");
-				Move m = new FileTransTaskModel().new Move();
-				m.setPath(movePath);
-				model.setMove(m);
+				String group = task.attributeValue("group");
+				String desc = task.attributeValue("desc");
+				String cron = task.attributeValue("cron");
+				String nextId = task.attributeValue("nextId");
+				FileTransTaskModel model = new FileTransTaskModel();
+				model.setId(id);
+				model.setDesc(desc);
+				model.setGroup(group);
+				model.setCron(cron);
+				model.setNextId(nextId);
+				//from 若存在多个from只取第一个
+				Element from = task.element("from");
+				if(from!=null){
+					String type = from.attributeValue("type");
+					String serverid = from.attributeValue("serverid");
+					String path = from.elementTextTrim("path");
+					From f = new FileTransTaskModel().new From();
+					f.setPath(path);
+					f.setType(type);
+					f.setServerid(serverid);
+					model.setFrom(f);
+					//to
+					List<To> tolist = new ArrayList<To>();
+					for (Iterator<?> j = task.elementIterator("to"); j.hasNext();) {
+						Element to = (Element) j.next();
+						String type1 = to.attributeValue("type");
+						String serverid1 = to.attributeValue("serverid");
+						String path1 = to.elementTextTrim("path");
+						To t = new FileTransTaskModel().new To();
+						t.setPath(path1);
+						t.setType(type1);
+						t.setServerid(serverid1);
+						tolist.add(t);
+					}
+					model.setTo(tolist);
+					//move
+					Element move = task.element("move");
+					if(move!=null){
+						String movePath = move.elementTextTrim("path");
+						Move m = new FileTransTaskModel().new Move();
+						m.setPath(movePath);
+						model.setMove(m);
+					}
+				}
+				//delete
+				//delete 可以不依赖from单独存在
+				List<Delete> deletelist = new ArrayList<Delete>();
+				for (Iterator<?> j = task.elementIterator("delete"); j.hasNext();) {
+					Element delete = (Element) j.next();
+					String type1 = delete.attributeValue("type");
+					String serverid1 = delete.attributeValue("serverid");
+					String path1 = delete.elementTextTrim("path");
+					Delete d = new FileTransTaskModel().new Delete();
+					d.setPath(path1);
+					d.setType(type1);
+					d.setServerid(serverid1);
+					deletelist.add(d);
+				}
+				model.setDelete(deletelist);
+				taskConfigMap.put(id, model);
 			}
-			//delete
-			//delete 可以不依赖from单独存在
-			List<Delete> deletelist = new ArrayList<Delete>();
-			for (Iterator<?> j = task.elementIterator("delete"); j.hasNext();) {
-				Element delete = (Element) j.next();
-				String type1 = delete.attributeValue("type");
-				String serverid1 = delete.attributeValue("serverid");
-				String path1 = delete.elementTextTrim("path");
-				Delete d = new FileTransTaskModel().new Delete();
-				d.setPath(path1);
-				d.setType(type1);
-				d.setServerid(serverid1);
-				deletelist.add(d);
-			}
-			model.setDelete(deletelist);
-			taskConfigMap.put(id, model);
+		}finally{
+			is.close();
 		}
 	}
 	
+	public void doInitUser() throws IOException, DocumentException{
+		logger.info("user config init");
+		InputStream is = null;
+		try{
+			ClassPathResource fsr =new ClassPathResource("user.xml");
+			is = fsr.getInputStream();
+			SAXReader saxReader = new SAXReader();
+			Document document = saxReader.read(is);
+			Element root = document.getRootElement();
+		}finally{
+			if(is!=null){
+				is.close();
+			}
+		}
+	}
 	@Override
 	public TaskModel getTaskModel(String taskId) {
 		init();

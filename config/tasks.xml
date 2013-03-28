@@ -17,7 +17,7 @@
 			</servers>
 	</common>
 	<tasks>
-		<task id="1"  group="1" desc="测试用" cron="false" nextId="2">
+		<task id="1"  group="1" desc="测试用1" cron="false" nextId="2">
 			<!-- get 获取  put 上传-->
 			<from type="ftp"  serverid="-1">
 				<path>var path = "offline/offlinefiles/send/(\\d{11})/((FH|SS|SN|SR|ER|BL)(\\w{34}|\\w{23})$)";</path>
@@ -30,7 +30,7 @@
 				<path>var path = "offline/offlineBak/send/${1}/"+getTodayDate()+"/${2}";</path>
 			</move>
 		</task>
-		<task id="2"  group="1" desc="测试用" cron="false">
+		<task id="2"  group="1" desc="测试用2" cron="false">
 			<!-- get 获取  put 上传-->
 			<from type="ftp1"  serverid="-1">
 				<path>var path = "qcbank/(.*?)/acc/(.*?)";</path>

@@ -2,6 +2,8 @@ package com.david4.filetrans.util;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.david4.filetrans.model.FileTransTaskModel.Delete;
@@ -10,7 +12,8 @@ import com.david4.filetrans.model.FileTransTaskModel.To;
 import com.david4.filetrans.model.ServerConfig;
 @Component
 public class SFTPUtil implements FileTransUtil{
-
+	private static final Logger logger = LoggerFactory
+			.getLogger(SFTPUtil.class);
 	@Override
 	public List<String> getPathList(From from) {
 		// TODO Auto-generated method stub

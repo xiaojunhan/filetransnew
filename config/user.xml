@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+	<user>
+		<name>admin</name>
+		<password>password</password>
+		<!-- 存taskId -->
+		<task>1,2</task>
+	</user>
+	
+	<user>
+		<name>test</name>
+		<password>test</password>
+		<!-- 存taskId -->
+		<task>1</task>
+	</user>
+</root>

@@ -7,22 +7,6 @@ import com.david4.filetrans.model.ServerConfig;
 
 public interface TaskConfig {
 	/**
-	 * 初始状态
-	 */
-	public static final int DEFAULT =0;
-	/**
-	 * 运行中
-	 */
-	public static final int RUNNING =1;
-	/**
-	 * 已完成
-	 */
-	public static final int COMPLETE =2;
-	/**
-	 * 失败
-	 */
-	public static final int ERROR =3;
-	/**
 	 * 初始化
 	 */
 	public void init() ;

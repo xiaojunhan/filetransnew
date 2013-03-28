@@ -30,7 +30,7 @@ import com.david4.filetrans.model.ServerConfig;
 
 @Component
 public class FTPUtil implements FileTransUtil {
-	protected static final Logger logger = LoggerFactory
+	private static final Logger logger = LoggerFactory
 			.getLogger(FTPUtil.class);
 
 	@Autowired
@@ -79,11 +79,13 @@ public class FTPUtil implements FileTransUtil {
 
 	@Override
 	public void put(To to, String toPath, String localPath) throws Exception {
-		FTPClient client = getFtpClient(to.getServerid());
-		mkdirs(getFtpDir(toPath), client);
-		File file = new File(localPath);
-		FileInputStream fis = new FileInputStream(file);
+		FTPClient client = null;
+		FileInputStream fis = null;
 		try {
+			client = getFtpClient(to.getServerid());
+			mkdirs(getFtpDir(toPath), client);
+			File file = new File(localPath);
+			fis = new FileInputStream(file);
 			boolean b = client.storeFile(toPath, fis);
 			if (!b) {
 				logger.warn("put file error,topath=" + toPath);
@@ -91,7 +93,9 @@ public class FTPUtil implements FileTransUtil {
 			}
 		} finally {
 			try {
-				fis.close();
+				if(fis!=null){
+					fis.close();
+				}
 			} catch (Exception e) {
 
 			}
@@ -314,6 +318,7 @@ public class FTPUtil implements FileTransUtil {
 		FTPClient client = null;
 		try {
 			client = getFtpClient(serverConfig);
+			mkdirs(getFtpDir(toPath), client);
 			client.rename(fromPath, toPath);
 		} finally {
 			close(client);
