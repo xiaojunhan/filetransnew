@@ -148,6 +148,9 @@
 		clearConsole();
 		lastSize = 0;
 	}
+	function logout(){
+		window.location.href="${path}/logout.jhtml";
+	}
 </script>
 </head>
 <body>
@@ -155,19 +158,14 @@
 		<tr align="center">
 			<td colspan="2">
 				<select name="taskId" id="taskId" onchange="selectChange()">
-					<c:if test="${param.test==1}">
-						<option value="-1">本机测试</option>
-					</c:if>
-					<option value="1">文件上传到清结算服务器</option>
-					<option value="2">文件下载到清结算前置</option>
-					<!-- <option value="3">黑名单文件从卡管到清结算前置</option> -->
+					<c:forEach items="${taskModelList}" var="task">
+						<option value="${task.id}">${task.desc}</option>
+					</c:forEach>
 				</select>
 				<input type="button" id="startButton" value="启动" onclick="startTask();" />
-				<input type="button" value="文件预览" onclick="listFile();" />
-				<c:if test="${param.show==1}">
-					<input type="button" value="刷新配置文件" onclick="refresh();" />
-				</c:if>
 				<input type="button" value="清空控制台" onclick="clearConsole();" />
+				
+				<input type="button" value="退出" onclick="logout();" />
 			</td>
 		</tr>
 		<tr align="center">

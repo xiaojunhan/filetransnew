@@ -1,5 +1,8 @@
 package com.david4.filetrans.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +12,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.david4.common.BaseController;
+import com.david4.common.model.TaskModel;
 import com.david4.console.TaskControl;
 import com.david4.console.TaskInfo;
 import com.david4.filetrans.config.TaskConfig;
@@ -46,13 +50,27 @@ public class FiletransController  extends BaseController{
 			return "login";
 		}
 		String tasks = user.getTasks();
+		
+		List<TaskModel> list = new ArrayList<TaskModel>();
 		if(tasks!=null && tasks.trim().length()>0){
 			request.getSession().setAttribute("TASKS_"+name, tasks);
 			String[] taskArr = tasks.split(",");
+			if(taskArr!=null && taskArr.length>0){
+				for(String taskId:taskArr){
+					TaskModel taskModel = taskConfig.getTaskModel(taskId);
+					list.add(taskModel);
+				}
+			}
 		}
+		model.addAttribute("taskModelList", list);
 		return "filetrans/index";
 	}
 	
+	@RequestMapping(value = "/logout.jhtml")
+	public String logout(HttpServletRequest request){
+		request.getSession().invalidate();
+		return "login";
+	}
 	/**
 	 * 刷新配置文件
 	 * @param model
