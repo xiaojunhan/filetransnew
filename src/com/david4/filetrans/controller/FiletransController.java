@@ -34,10 +34,14 @@ public class FiletransController  extends BaseController{
 	public String index(Model model){
 		return "filetrans/index";
 	}
-	@RequestMapping(value = "/index1.jhtml")
-	public String index1(Model model){
-		return "filetrans/indexforjingliang";
-	}
+	/**
+	 * 登录
+	 * @param name
+	 * @param password
+	 * @param model
+	 * @param request
+	 * @return
+	 */
 	@RequestMapping(value = "/login.jhtml")
 	public String login(String name,String password,Model model,HttpServletRequest request){
 		User user = userDao.getUser(name);
@@ -53,7 +57,7 @@ public class FiletransController  extends BaseController{
 		
 		List<TaskModel> list = new ArrayList<TaskModel>();
 		if(tasks!=null && tasks.trim().length()>0){
-			request.getSession().setAttribute("TASKS_"+name, tasks);
+			request.getSession().setAttribute("TASKS", tasks);
 			String[] taskArr = tasks.split(",");
 			if(taskArr!=null && taskArr.length>0){
 				for(String taskId:taskArr){

@@ -1,5 +1,7 @@
 package com.david4.console.controller;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
@@ -10,10 +12,13 @@ import com.david4.common.BaseController;
 import com.david4.common.exception.FromFileEmptyException;
 import com.david4.common.exception.TaskNotExsitException;
 import com.david4.common.model.TaskModel;
+import com.david4.console.Code;
 import com.david4.console.TaskControl;
 import com.david4.console.TaskInfo;
 import com.david4.console.service.ConsoleService;
 import com.david4.filetrans.config.TaskConfig;
+import com.david4.filetrans.dao.UserDao;
+import com.david4.filetrans.model.User;
 @Controller
 @RequestMapping(value = "/console")
 public class ConsoleController  extends BaseController{
@@ -22,6 +27,10 @@ public class ConsoleController  extends BaseController{
 	@Autowired
 	@Qualifier("taskConfig")
 	private TaskConfig taskConfig;
+	
+	@Autowired
+	@Qualifier("userDao")
+	private UserDao userDao;
 	/**
 	 * 获取运行状态
 	 * @param model
@@ -54,7 +63,27 @@ public class ConsoleController  extends BaseController{
 	 * @return
 	 */
 	@RequestMapping(value = "/runtask.jhtml",params={"taskId"})
-	public String runTask(String taskId,Model model){
+	public String runTask(String taskId,Model model,HttpServletRequest request){
+		String tasks = (String)(request.getSession().getAttribute("TASKS"));
+		if(tasks==null){
+			model.addAttribute(RESULT,"没有权限或登录已过期");
+			return PARAMETER;
+		}
+		boolean flag = false;
+		String[] taskArr = tasks.split(",");
+		if(taskArr!=null && taskArr.length>0){
+			for(String s:taskArr){
+				if(s.equals(taskId)){
+					flag = true;
+					break;
+				}
+			}
+		}
+		if(!flag){
+			model.addAttribute(RESULT,"没有权限");
+			return PARAMETER;
+		}
+		
 		if(!TaskControl.canRun(taskId)){
 			model.addAttribute(RESULT,"该任务在执行中");
 			return PARAMETER;
@@ -75,6 +104,71 @@ public class ConsoleController  extends BaseController{
 		}catch (Exception e) {
 			TaskInfo.log(group,"#"+taskId+"#执行失败"+e.getMessage());
 			model.addAttribute(RESULT,e.getMessage());
+			e.printStackTrace();
+		}finally{
+			TaskControl.complete(taskId);
+		}
+		return PARAMETER;
+	}
+	
+	/**
+	 * 对外提供的服务
+	 * @return
+	 */
+	@RequestMapping(value = "/run.jhtml",params={"taskId","name","password"})
+	public String run(String taskId,String name,String password,Model model){
+		User user = userDao.getUser(name);
+		//用户名判断
+		if(user == null){
+			model.addAttribute(RESULT, getRtnMsg(Code.CODE_NONAME, Code.MESSAGE_NONAME));
+			return PARAMETER;
+		}
+		//密码判断
+		if(password==null || !password.equals(user.getPassword())){
+			model.addAttribute(RESULT, getRtnMsg(Code.CODE_PASERR, Code.MESSAGE_PASERR));
+			return PARAMETER;
+		}
+		//权限判断
+		boolean flag = false;
+		String tasks = user.getTasks();
+		if(tasks!=null && tasks.trim().length()>0){
+			String[] taskArr = tasks.split(",");
+			if(taskArr!=null && taskArr.length>0){
+				for(String s:taskArr){
+					if(s.equals(taskId)){
+						flag = true;
+						break;
+					}
+				}
+			}
+		}
+		if(!flag){
+			model.addAttribute(RESULT, getRtnMsg(Code.CODE_NOROLE, Code.MESSAGE_NOROLE));
+			return PARAMETER;
+		}
+		//是否执行中判断
+		if(!TaskControl.canRun(taskId)){
+			model.addAttribute(RESULT,getRtnMsg(Code.CODE_RUNNING, Code.MESSAGE_RUNNING));
+			return PARAMETER;
+		}
+		
+		String group = "0";
+		try{
+			TaskModel task = taskConfig.getTaskModel(taskId);
+			//TODO 提供两种方式 同步 异步，目前这个是同步的
+			consoleService.doTask(task);
+			group = task.getGroup();
+			TaskInfo.log(group,"#"+taskId+"#执行成功");
+			model.addAttribute(RESULT,getRtnMsg(Code.CODE_SUCCESS, Code.MESSAGE_SUCCESS));
+		}catch(TaskNotExsitException e){
+			TaskInfo.log(group,"#"+taskId+"#"+e.getMessage());
+			model.addAttribute(RESULT,getRtnMsg(Code.CODE_NOTASK, Code.MESSAGE_NOTASK));
+		}catch(FromFileEmptyException e){
+			TaskInfo.log(group,"#"+taskId+"#"+e.getMessage());
+			model.addAttribute(RESULT,getRtnMsg(Code.CODE_FILEMPTY, Code.MESSAGE_FILEMPTY));
+		}catch (Exception e) {
+			TaskInfo.log(group,"#"+taskId+"#执行失败"+e.getMessage());
+			model.addAttribute(RESULT,getRtnMsg(Code.CODE_ERROR, Code.MESSAGE_ERROR));
 			e.printStackTrace();
 		}finally{
 			TaskControl.complete(taskId);
