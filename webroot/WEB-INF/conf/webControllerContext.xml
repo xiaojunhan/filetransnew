@@ -34,5 +34,7 @@
 	
 	<bean id="taskConfig" class="com.david4.filetrans.config.XmlConfig"></bean>
 	
+	<bean id="userDao" class="com.david4.filetrans.dao.impl.UserXmlDao"></bean>
+	
 	<bean id="systeminit"  class="com.david4.common.SystemInit" lazy-init="false" init-method="init"></bean>
 </beans>

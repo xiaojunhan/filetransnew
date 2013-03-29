@@ -19,7 +19,7 @@ public class TestController extends BaseController{
 		System.out.println("===test===");
 		model.addAttribute("test", "tttt");
 		//System.out.println(Config.get("LOCAL_PATH"));
-		taskConfig.init();
+		//taskConfig.init();
 		System.out.println("===test11===");
 		return "test/test";
 	}

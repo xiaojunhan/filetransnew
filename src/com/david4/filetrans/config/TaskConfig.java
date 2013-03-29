@@ -7,10 +7,6 @@ import com.david4.filetrans.model.ServerConfig;
 
 public interface TaskConfig {
 	/**
-	 * 初始化
-	 */
-	public void init() ;
-	/**
 	 * 获取task
 	 * @param taskId
 	 * @return

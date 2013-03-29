@@ -53,7 +53,7 @@ public class XmlConfig extends  GlobalBase implements TaskConfig {
 	public static void main(String[] args) {
 		new XmlConfig().init();
 	}
-	@Override
+	
 	public void init() {
 		if(initFlag.get()){
 			return;
@@ -64,7 +64,7 @@ public class XmlConfig extends  GlobalBase implements TaskConfig {
 		}
 		try{
 			doInitTask();
-			doInitUser();
+			//doInitUser();
 		}catch(Exception e){
 			logger.error("config init error,"+e.getMessage());
 			e.printStackTrace();
@@ -203,21 +203,21 @@ public class XmlConfig extends  GlobalBase implements TaskConfig {
 		}
 	}
 	
-	public void doInitUser() throws IOException, DocumentException{
-		logger.info("user config init");
-		InputStream is = null;
-		try{
-			ClassPathResource fsr =new ClassPathResource("user.xml");
-			is = fsr.getInputStream();
-			SAXReader saxReader = new SAXReader();
-			Document document = saxReader.read(is);
-			Element root = document.getRootElement();
-		}finally{
-			if(is!=null){
-				is.close();
-			}
-		}
-	}
+//	public void doInitUser() throws IOException, DocumentException{
+//		logger.info("user config init");
+//		InputStream is = null;
+//		try{
+//			ClassPathResource fsr =new ClassPathResource("user.xml");
+//			is = fsr.getInputStream();
+//			SAXReader saxReader = new SAXReader();
+//			Document document = saxReader.read(is);
+//			Element root = document.getRootElement();
+//		}finally{
+//			if(is!=null){
+//				is.close();
+//			}
+//		}
+//	}
 	@Override
 	public TaskModel getTaskModel(String taskId) {
 		init();
