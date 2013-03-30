@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 /**
  * js脚本简单解析
  * 对ScriptEngine理解不深，有隐患
+ * 先凑合用个低效率的版本 之前版并发时出错
  * @author hanxj
  *
  */
@@ -19,9 +20,8 @@ public class ScriptUtil {
 	private  static final Logger logger = LoggerFactory.getLogger(ScriptUtil.class);
 	
 	private static ScriptEngineManager sem = new ScriptEngineManager();
-	private static ScriptEngine engine = sem.getEngineByExtension("js");
-
-	static{
+	
+	public static void init(ScriptEngine engine){
 		String path = ScriptUtil.class.getResource("/").toString();
 		path = path.substring(5);
 		path = path + "common.js";
@@ -34,6 +34,8 @@ public class ScriptUtil {
 		}
 	}
 	public static Object get(String script, String key) {
+		ScriptEngine engine = sem.getEngineByExtension("js");
+		init(engine);
 		logger.trace("script="+script);
 		try {
 			engine.eval(script);
