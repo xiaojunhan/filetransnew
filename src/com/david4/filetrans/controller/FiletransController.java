@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.david4.common.BaseController;
 import com.david4.common.model.TaskModel;
-import com.david4.console.TaskControl;
-import com.david4.console.TaskInfo;
 import com.david4.filetrans.config.TaskConfig;
 import com.david4.filetrans.dao.UserDao;
 import com.david4.filetrans.model.User;

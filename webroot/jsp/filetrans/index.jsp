@@ -163,6 +163,7 @@
 					</c:forEach>
 				</select>
 				<input type="button" id="startButton" value="启动" onclick="startTask();" />
+				<input type="button" value="文件预览" onclick="listFile();" />
 				<input type="button" value="清空控制台" onclick="clearConsole();" />
 				
 				<input type="button" value="退出" onclick="logout();" />

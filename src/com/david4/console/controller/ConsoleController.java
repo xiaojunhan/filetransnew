@@ -1,5 +1,7 @@
 package com.david4.console.controller;
 
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +20,10 @@ import com.david4.console.TaskInfo;
 import com.david4.console.service.ConsoleService;
 import com.david4.filetrans.config.TaskConfig;
 import com.david4.filetrans.dao.UserDao;
+import com.david4.filetrans.model.FileTransTaskModel;
+import com.david4.filetrans.model.FileTransTaskModel.From;
 import com.david4.filetrans.model.User;
+import com.david4.filetrans.service.FileTransService;
 @Controller
 @RequestMapping(value = "/console")
 public class ConsoleController  extends BaseController{
@@ -31,6 +36,9 @@ public class ConsoleController  extends BaseController{
 	@Autowired
 	@Qualifier("userDao")
 	private UserDao userDao;
+	
+	@Autowired
+	private FileTransService fileTransService;
 	/**
 	 * 获取运行状态
 	 * @param model
@@ -176,67 +184,48 @@ public class ConsoleController  extends BaseController{
 		return PARAMETER;
 	}
 	
-//	@RequestMapping(value = "/listfile.jhtml",params={"taskId"})
-//	public String listFile(String taskId,Model model){
-//		try{
-//			TaskModel task = XmlConfig.getTaskModel(taskId);
-//			if(task instanceof FiletransTaskModel){
-//				FiletransTaskModel ftm = (FiletransTaskModel)task;
-//				String fromFtpId = ftm.getFromftp();
-//				FTPConfig fromConfig = XmlConfig.getFTPConfig(fromFtpId);
-//				if(fromConfig==null){
-//					throw new Exception("get ftp config error,config is null,ftpid="+fromFtpId);
-//				}
-//				FTPClient fromftp = FTPUtil.getFtpClient(fromConfig);
-//				if(fromftp==null){
-//					throw new Exception("connect and login ftp error,"+fromConfig.toString());
-//				}
-//				String fromPath = ftm.getFrompath();
-//				if(fromPath==null || fromPath.trim().length()==0){
-//					throw new Exception("fromPath null,fromPath="+fromPath);
-//				}
-//				fromPath = ScriptUtil.getString(fromPath, Constants.SCRIPT_PATH);
-//				if(fromPath==null || fromPath.trim().length()==0){
-//					throw new Exception("fromPath null,fromPath="+fromPath);
-//				}
-//				String toPath = ftm.getTopath();
-//				if(toPath==null || toPath.trim().length()==0){
-//					throw new Exception("toPath null,toPath="+toPath);
-//				}
-//				String fromPathBak =  ftm.getFrompathbak();
-//				List<String> pathList = FTPUtil.getFileList(fromPath, fromftp);
-//				if(pathList==null || pathList.size()==0){
-//					model.addAttribute(RESULT, "没有查询到文件");
-//					return PARAMETER;
-//				}
-//				StringBuilder sb = new StringBuilder();
-//				int i = 1;
-//				for(String path:pathList){
-//					String toPathTemp = FileUtil.getPath(path, toPath, fromPath);
-//					toPathTemp = ScriptUtil.getString(toPathTemp, Constants.SCRIPT_PATH);
-//					String fromPathBakTemp = null;
-//					if(fromPathBak==null || fromPathBak.trim().length()==0){
-//						fromPathBakTemp=null;
-//					}else{
-//						fromPathBakTemp = FileUtil.getPath(path, fromPathBak, fromPath);
-//						fromPathBakTemp = ScriptUtil.getString(fromPathBakTemp, Constants.SCRIPT_PATH);
-//					}
-//					logger.info("frompath="+path);
-//					logger.info("frompathbak="+fromPathBakTemp);
-//					logger.info("topath="+toPathTemp);
-//					sb.append(i).append("原文件  ").append(path).append(TaskInfo.FEN_GE)
-//					.append(i).append("备份文件").append(fromPathBakTemp).append(TaskInfo.FEN_GE)
-//					.append(i).append("目标文件").append(toPathTemp).append(TaskInfo.FEN_GE)
-//					.append("=====================================================")
-//					.append(TaskInfo.FEN_GE);
-//					i++;
-//				}
-//				model.addAttribute(RESULT, sb.toString());
-//				return PARAMETER;
-//			}
-//		}catch(Exception e){
-//			model.addAttribute(RESULT, e.getMessage());
-//		}
-//		return PARAMETER;
-//	}
+	@RequestMapping(value = "/listfile.jhtml",params={"taskId"})
+	public String listFile(String taskId,Model model){
+		try{
+			TaskModel taskModel = taskConfig.getTaskModel(taskId);
+			if(taskModel instanceof FileTransTaskModel){
+				FileTransTaskModel ftm = (FileTransTaskModel)taskModel;
+				From from = ftm.getFrom();
+				if(from == null){
+					throw new Exception("from model null");
+				}				
+				List<String> pathList = fileTransService.getPathList(from);
+				if(pathList==null || pathList.size()==0){
+					model.addAttribute(RESULT, "没有查询到文件");
+					return PARAMETER;
+				}
+				StringBuilder sb = new StringBuilder();
+				int i = 1;
+				for(String path:pathList){
+//					System.out.println(path);
+//					System.out.println(new String(path.getBytes("ISO-8859-1"),
+//							"UTF-8"));
+//					System.out.println(new String(path.getBytes("ISO-8859-1"),
+//							"GBK"));
+//					System.out.println(new String(path.getBytes("ISO-8859-1")));
+//					System.out.println(new String(path.getBytes("GBK"),
+//							"UTF-8"));
+//					System.out.println(new String(new String(path.getBytes("UTF-8"), "ISO-8859-1").getBytes("UTF-8")));
+//					
+//					String xml = new String(path);
+//					byte[] latin1 = xml.getBytes("UTF-8");
+//					byte[] utf8 = new String(latin1, "ISO-8859-1").getBytes("UTF-8");
+//					System.out.println(new String(utf8));
+				//	byte[] utf8 = new String(latin1, "ISO-8859-1").getBytes("UTF-8");
+					sb.append(i).append(":").append(path).append(TaskInfo.FEN_GE);
+					i++;
+				}
+				model.addAttribute(RESULT, sb.toString());
+				return PARAMETER;
+			}
+		}catch(Exception e){
+			model.addAttribute(RESULT, e.getMessage());
+		}
+		return PARAMETER;
+	}
 }

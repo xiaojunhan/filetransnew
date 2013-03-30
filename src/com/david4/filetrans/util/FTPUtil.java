@@ -43,6 +43,9 @@ public class FTPUtil implements FileTransUtil {
 	@Override
 	public List<String> getPathList(From from) throws Exception {
 		String path = from.getPath();
+		if(path==null || path.trim().length()==0){
+			throw new Exception("fromPath null,fromPath="+path);
+		}
 		path = ScriptUtil.getString(path, Constants.SCRIPT_PATH);
 		if(path==null || path.trim().length()==0){
 			throw new Exception("fromPath null,fromPath="+path);
