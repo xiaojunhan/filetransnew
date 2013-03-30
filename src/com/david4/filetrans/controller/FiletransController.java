@@ -75,21 +75,21 @@ public class FiletransController  extends BaseController{
 		request.getSession().invalidate();
 		return "login";
 	}
-	/**
-	 * 刷新配置文件
-	 * @param model
-	 * @return
-	 */
-	@RequestMapping(value = "/refresh.jhtml")
-	public String refresh(Model model){
-		if(!TaskControl.hasRunningTask()){
-			taskConfig.refresh();
-			TaskInfo.log("刷新配置文件成功");
-			model.addAttribute(RESULT,"刷新配置文件成功");
-		}else{
-			TaskInfo.log("有任务在运行，禁止刷新配置文件");
-			model.addAttribute(RESULT,"有任务在运行，禁止刷新配置文件");
-		}
-		return PARAMETER;
-	}
+//	/**
+//	 * 刷新配置文件
+//	 * @param model
+//	 * @return
+//	 */
+//	@RequestMapping(value = "/refresh.jhtml")
+//	public String refresh(Model model){
+//		if(!TaskControl.hasRunningTask()){
+//			taskConfig.refresh();
+//			TaskInfo.log("刷新配置文件成功");
+//			model.addAttribute(RESULT,"刷新配置文件成功");
+//		}else{
+//			TaskInfo.log("有任务在运行，禁止刷新配置文件");
+//			model.addAttribute(RESULT,"有任务在运行，禁止刷新配置文件");
+//		}
+//		return PARAMETER;
+//	}
 }

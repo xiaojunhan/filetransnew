@@ -31,6 +31,7 @@ public interface FileTransUtil {
 	public void get(From from,String fromPath,String localPath) throws Exception;
 	/**
 	 * 上传
+	 * 上传时先传到一个临时目录，传完后再移动到需要的目录
 	 * @param to
 	 * @param toPath
 	 * @param localPath

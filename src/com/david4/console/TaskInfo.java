@@ -31,9 +31,9 @@ public class TaskInfo {
 	 */
 	public static final int DEFAULT_SIZE = 20;
 	public static final int TOTAL_SIZE = 1000;
-	public static void log(String msg){
-		log("0", msg);
-	}
+//	public static void log(String msg){
+//		log("0", msg);
+//	}
 	public static void log(String group,String msg){
 		List<String> infoList = infoMap.get(group);
 		if(infoList==null){

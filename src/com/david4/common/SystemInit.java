@@ -28,7 +28,8 @@ public class SystemInit{
 	 * 初始化需要定时执行的任务
 	 */
 	public void initJobTask(){
-		Map<String,TaskModel> map = null;//TaskConfig.COMPLETE
+		TaskConfig taskConfig =  SpringContainer.getBean("taskConfig",TaskConfig.class);
+		Map<String,TaskModel> map = taskConfig.getAllTask();//TaskConfig.COMPLETE
 		StdScheduler singleScheduler =(StdScheduler) SpringContainer.getBean("singleSchedulerFactory");
 		if(singleScheduler==null){
 			return;

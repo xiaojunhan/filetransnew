@@ -6,12 +6,17 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.david4.common.filter.MyNameFilter;
 import com.david4.common.model.PathModel;
 
 
 
 public class FileUtil {
+	private  static final Logger logger = LoggerFactory.getLogger(FileUtil.class);
+	
 	public static void main(String[] args){
 		//D:\ftp\batch\qbbank\CMB\acc
 		String path = "D:/ftp/batch/qcbank/(.*?)/acc/(.*?)/(.*?)";
@@ -67,7 +72,12 @@ public class FileUtil {
 			}
 			if(next!=null){
 				PathModel pm = new PathModel();
-				pm.setPath(value.replaceFirst("/+", ""));
+				//pm.setPath(value.replaceFirst("/+", ""));
+				//用于去掉第一位的/
+				if(value.indexOf("/")==0){
+					value = value.substring(1);
+				}
+				pm.setPath(value);
 				pm.setNext(next);
 				list.add(pm);
 			}
@@ -123,6 +133,9 @@ public class FileUtil {
 			String value = m1.group(1);
 			int index = Integer.parseInt(value);
 			if(strArr==null || strArr.length<index){
+				logger.error("from="+from);
+				logger.error("to="+to);
+				logger.error("reg="+reg);
 				throw new Exception("目标路径中需要的参数超过源路径中提供的数量");
 			}
 			//to = to.replaceAll("\\$\\{"+value+"\\}", "\""+strArr[index-1]+"\"");

@@ -45,11 +45,12 @@ public class FileTransService extends BaseService{
 		if(fromPathTemp==null || fromPathTemp.trim().length()==0){
 			throw new Exception("fromPath null,fromPath="+fromPathTemp);
 		}
+		logger.info(fromPathTemp);
 		fromPathTemp = ScriptUtil.getString(fromPathTemp, Constants.SCRIPT_PATH);
 		if(fromPathTemp==null || fromPathTemp.trim().length()==0){
 			throw new Exception("fromPath null,fromPath="+fromPathTemp);
 		}
-		from.setPath(fromPathTemp);
+		
 		List<String> list= getPathList(from);
 		if(list==null || list.size()==0){
 			throw new FromFileEmptyException("from file empty");
@@ -61,21 +62,41 @@ public class FileTransService extends BaseService{
 				String tempFileName = getTempFileName();
 				String localPath = getLOCAL_PATH_TEMP()+tempFileName;
 				//下载到本地
-				download(from,fromPath,localPath);
+				try{
+					download(from,fromPath,localPath);
+				}catch(Exception e){
+					String toServerId = from.getServerid();
+					ServerConfig serverConfig = taskConfig.getServerConfig(toServerId);
+					String host = null;
+					int port = 0;
+					String name = null;
+					if(serverConfig!=null){
+						host = serverConfig.getHost();
+						port = serverConfig.getPort();
+						name = serverConfig.getUserName();
+					}
+					TaskInfo.log(taskModel.getGroup(),"获取文件失败,fromPath="+fromPath+",host="+host+",port="+port
+							+",name="+name);
+					logger.error(e.getMessage());
+				}
 				for(To to:toList){
-					String toPath = getToPath(fromPath, to.getPath(), from.getPath());
+					String toPath = null;
 					try{
+						toPath = getToPath(fromPath, to.getPath(), fromPathTemp);
 						fileTrans(localPath,to,toPath);
 					}catch(Exception e){
 						String toServerId = to.getServerid();
 						ServerConfig serverConfig = taskConfig.getServerConfig(toServerId);
 						String host = null;
 						int port = 0;
+						String name = null;
 						if(serverConfig!=null){
 							host = serverConfig.getHost();
 							port = serverConfig.getPort();
+							name = serverConfig.getUserName();
 						}
-						TaskInfo.log("传文件失败,fromPath="+fromPath+"to host="+host+" port="+port);
+						TaskInfo.log(taskModel.getGroup(),"传文件失败,fromPath="+fromPath+",toPath="+toPath+",host="+host+",port="+port
+								+",name="+name);
 						logger.error(e.getMessage());
 					}
 				}
@@ -90,8 +111,24 @@ public class FileTransService extends BaseService{
 			String movePath = move.getPath();
 			if(movePath!=null && movePath.trim().length()>0){
 				for(String fromPath:list){
-					String movePathTemp = getToPath(fromPath, movePath, from.getPath());
-					move(from, fromPath, movePathTemp);
+					String movePathTemp = getToPath(fromPath, movePath, fromPathTemp);
+					try{
+						move(from, fromPath, movePathTemp);
+					}catch(Exception e){
+						String toServerId = from.getServerid();
+						ServerConfig serverConfig = taskConfig.getServerConfig(toServerId);
+						String host = null;
+						int port = 0;
+						String name = null;
+						if(serverConfig!=null){
+							host = serverConfig.getHost();
+							port = serverConfig.getPort();
+							name = serverConfig.getUserName();
+						}
+						TaskInfo.log(taskModel.getGroup(),"移动文件失败,fromPath="+fromPath+",toPath="+movePathTemp+",host="+host+",port="+port
+								+",name="+name);
+						logger.error(e.getMessage());
+					}
 				}
 			}
 		}
@@ -131,7 +168,7 @@ public class FileTransService extends BaseService{
 		try {
 			fromFileTransUtil.put(to, toPath, localPath);
 		} catch (Exception e) {
-			logger.error("put file error,toPath="+toPath);
+			logger.error("put file error,toPath="+toPath+","+e.getMessage());
 			throw e;
 		}
 	}

@@ -17,7 +17,7 @@
 			</servers>
 	</common>
 	<tasks>
-		<task id="1"  group="1" desc="测试用1" cron="false" nextId="2">
+		<task id="1"  group="1" desc="测试用1" cron="false">
 			<!-- get 获取  put 上传-->
 			<from type="ftp"  serverid="-1">
 				<path>var path = "offline/offlinefiles/send/(\\d{11})/((FH|SS|SN|SR|ER|BL)(\\w{34}|\\w{23})$)";</path>
@@ -35,21 +35,12 @@
 			<from type="ftp"  serverid="-1">
 				<path>var path = "qcbank/(.*?)/acc/(.*?)";</path>
 			</from>
-			<to type="ftp"  serverid="-1">
+			<to type="ftp"  serverid="-3">
 				<path>var path = "weblogic/test/${1}/${2}";</path>
 			</to>
-			<to type="sftp"  serverid="-2">
-				<path>var path = "weblogic/test/${1}/${2}";</path>
-			</to>
-			<to type="ftp" serverid="-3">
-				<path>var path = "weblogic/test/${1}/${2}";</path>
-			</to>
-			<to type="sftp"  serverid="-4">
-				<path>var path = "weblogic/test/${1}/${2}";</path>
-			</to>
-			<delete type="ftp" serverid="-1">
-				<path>var path = "qcbank/(.*?)/acc/(.*?)";</path>
-			</delete>
+			<move1>
+				<path>var path = "offline/offlineBak/send/${1}/"+getTodayDate()+"/${2}";</path>
+			</move1>
 		</task>
 	</tasks>
 </root>

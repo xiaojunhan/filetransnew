@@ -22,6 +22,9 @@ import org.springframework.stereotype.Component;
 import com.david4.common.filter.MyFTPFileFilter;
 import com.david4.common.model.PathModel;
 import com.david4.common.util.FileUtil;
+import com.david4.common.util.NumberUtil;
+import com.david4.common.util.ScriptUtil;
+import com.david4.filetrans.Constants;
 import com.david4.filetrans.config.TaskConfig;
 import com.david4.filetrans.model.FileTransTaskModel.Delete;
 import com.david4.filetrans.model.FileTransTaskModel.From;
@@ -40,6 +43,10 @@ public class FTPUtil implements FileTransUtil {
 	@Override
 	public List<String> getPathList(From from) throws Exception {
 		String path = from.getPath();
+		path = ScriptUtil.getString(path, Constants.SCRIPT_PATH);
+		if(path==null || path.trim().length()==0){
+			throw new Exception("fromPath null,fromPath="+path);
+		}
 		FTPClient client = null;
 		try {
 			client = getFtpClient(from.getServerid());
@@ -64,8 +71,7 @@ public class FTPUtil implements FileTransUtil {
 		try {
 			boolean b = client.retrieveFile(fromPath, fos);
 			if (!b) {
-				logger.warn("get file error,fromPath=" + fromPath);
-				return;
+				throw new Exception("get file error");
 			}
 		} finally {
 			try {
@@ -79,6 +85,8 @@ public class FTPUtil implements FileTransUtil {
 
 	@Override
 	public void put(To to, String toPath, String localPath) throws Exception {
+		String toPathTemp = toPath.substring(0,toPath.indexOf("/"));
+		toPathTemp = toPathTemp + "/"+getTempName();
 		FTPClient client = null;
 		FileInputStream fis = null;
 		try {
@@ -86,10 +94,27 @@ public class FTPUtil implements FileTransUtil {
 			mkdirs(getFtpDir(toPath), client);
 			File file = new File(localPath);
 			fis = new FileInputStream(file);
-			boolean b = client.storeFile(toPath, fis);
+			boolean b = client.storeFile(toPathTemp, fis);
 			if (!b) {
-				logger.warn("put file error,topath=" + toPath);
-				return;
+				throw new Exception("storeFile error");
+			}
+			b= client.rename(toPathTemp, toPath);
+			/**
+			 * 执行rename
+			 * 失败的话，一般是由于文件已存在，所以删除源文件
+			 * 若删除源文件成功再次rename,若rename仍然失败,将临时文件删除，抛出异常退出
+			 * 若删除源文件失败 将临时文件删除，抛出异常退出
+			 */
+			if (!b) {
+				if(client.deleteFile(toPath)){
+					if(!client.rename(toPathTemp, toPath)){
+						client.deleteFile(toPathTemp);
+						throw new Exception("rename error");
+					}
+				}else{
+					client.deleteFile(toPathTemp);
+					throw new Exception("delete error");
+				}
 			}
 		} finally {
 			try {
@@ -132,12 +157,17 @@ public class FTPUtil implements FileTransUtil {
 		if (index == list.size() - 1) {
 			logger.debug("file==pm.getPath()==" + pm.getPath()
 					+ "==pm.getNext()==" + pm.getNext());
+			 
 			FTPFile[] ftpFileArr = client.listFiles(pm.getPath(),
 					new MyFTPFileFilter(pm.getNext()));
 			if (ftpFileArr != null && ftpFileArr.length > 0) {
 				for (FTPFile f : ftpFileArr) {
+					if(f.getName().equals(".")||f.getName().equals("..")){
+						continue;
+					}
 					String name = f.getName();
 					String tempPath = pm.getPath() + "/" + name;
+					//中文文件名的
 					tempPath = new String(tempPath.getBytes("UTF-8"),
 							"ISO-8859-1");
 					pathList.add(tempPath);
@@ -152,6 +182,9 @@ public class FTPUtil implements FileTransUtil {
 			FTPFile[] ftpFileArr = client.listDirectories(pm.getPath());
 			if (ftpFileArr != null && ftpFileArr.length > 0) {
 				for (FTPFile f : ftpFileArr) {
+					if(f.getName().equals(".")||f.getName().equals("..")){
+						continue;
+					}
 					Pattern p = Pattern.compile("^" + pm.getNext() + "$");
 					Matcher m = p.matcher(f.getName());
 					if (m.find()) {
@@ -299,6 +332,11 @@ public class FTPUtil implements FileTransUtil {
 	 */
 	public static void close(FTPClient ftp) {
 		if (ftp != null && ftp.isConnected()) {
+//			try {
+//				ftp.completePendingCommand();
+//			} catch (IOException e) {
+//				logger.warn(e.getMessage());
+//			}
 			try {
 				ftp.logout();
 			} catch (IOException e) {
@@ -309,6 +347,7 @@ public class FTPUtil implements FileTransUtil {
 			} catch (IOException e) {
 				logger.warn(e.getMessage());
 			}
+			
 		}
 	}
 
@@ -319,9 +358,23 @@ public class FTPUtil implements FileTransUtil {
 		try {
 			client = getFtpClient(serverConfig);
 			mkdirs(getFtpDir(toPath), client);
-			client.rename(fromPath, toPath);
+			boolean b = client.rename(fromPath, toPath);
+			if (!b) {
+				if(client.deleteFile(toPath)){
+					if(!client.rename(fromPath, toPath)){
+						throw new Exception("move rename error");
+					}
+				}else{
+					throw new Exception("move delete error");
+				}
+			}
 		} finally {
 			close(client);
 		}
+	}
+	
+	public static String getTempName(){
+		int random = NumberUtil.getRandom(100000, 999999);
+		return Long.toString(System.nanoTime())+random+"-do-not-delete";
 	}
 }

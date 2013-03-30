@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.david4.common.model.PathModel;
+
 public class T {
 	public class PathModel{
 		private String path;
@@ -22,6 +24,10 @@ public class T {
 		public void setNext(String next) {
 			this.next = next;
 		}
+		@Override
+		public String toString() {
+			return "PathModel [path=" + path + ", next=" + next + "]";
+		}
 	}
 	/**
 	 * @param args
@@ -37,16 +43,19 @@ public class T {
 	//	s="/s";
 		T t = new T();
 		List<PathModel> list = t.print(s);
-		List<File> fileList = new ArrayList<File>();
-		fileList = t.getFile(list.get(0), list.get(1), list, 0);
-
-		String toPath = "D:/home/weblogic/test/${1}/${2}aa.${3}";
-		toPath = "/home/weblogic/test/${1}.substring(1,2)/${2}.replace('WX','22')aa${3}";
-		for(File f:fileList){
-			System.out.println("f.getPath()=="+f.getPath());
-			String temp = getToPath(f.getPath(), toPath, s);
-			System.out.println("temp=="+temp);
+		for(PathModel p:list){
+			System.out.println(p);
 		}
+//		List<File> fileList = new ArrayList<File>();
+//		fileList = t.getFile(list.get(0), list.get(1), list, 0);
+//
+//		String toPath = "D:/home/weblogic/test/${1}/${2}aa.${3}";
+//		toPath = "/home/weblogic/test/${1}.substring(1,2)/${2}.replace('WX','22')aa${3}";
+//		for(File f:fileList){
+//			System.out.println("f.getPath()=="+f.getPath());
+//			String temp = getToPath(f.getPath(), toPath, s);
+//			System.out.println("temp=="+temp);
+//		}
 		
 		
 	}
