@@ -20,6 +20,7 @@ import com.david4.console.TaskInfo;
 import com.david4.console.service.ConsoleService;
 import com.david4.filetrans.config.TaskConfig;
 import com.david4.filetrans.dao.UserDao;
+import com.david4.filetrans.model.FileInfo;
 import com.david4.filetrans.model.FileTransTaskModel;
 import com.david4.filetrans.model.FileTransTaskModel.From;
 import com.david4.filetrans.model.User;
@@ -194,14 +195,14 @@ public class ConsoleController  extends BaseController{
 				if(from == null){
 					throw new Exception("from model null");
 				}				
-				List<String> pathList = fileTransService.getPathList(from);
+				List<FileInfo> pathList = fileTransService.getFileInfoList(from);
 				if(pathList==null || pathList.size()==0){
 					model.addAttribute(RESULT, "没有查询到文件");
 					return PARAMETER;
 				}
 				StringBuilder sb = new StringBuilder();
 				int i = 1;
-				for(String path:pathList){
+				for(FileInfo fileInfo:pathList){
 //					System.out.println(path);
 //					System.out.println(new String(path.getBytes("ISO-8859-1"),
 //							"UTF-8"));
@@ -217,7 +218,13 @@ public class ConsoleController  extends BaseController{
 //					byte[] utf8 = new String(latin1, "ISO-8859-1").getBytes("UTF-8");
 //					System.out.println(new String(utf8));
 				//	byte[] utf8 = new String(latin1, "ISO-8859-1").getBytes("UTF-8");
-					sb.append(i).append(":").append(path).append(TaskInfo.FEN_GE);
+					sb.append(i).append(":")
+					.append(fileInfo.getName())
+					.append(",")
+					.append(fileInfo.getSize())
+					.append(",")
+					.append(fileInfo.getDate())
+					.append(TaskInfo.FEN_GE);
 					i++;
 				}
 				model.addAttribute(RESULT, sb.toString());

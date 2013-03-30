@@ -38,9 +38,9 @@
 			<to type="ftp"  serverid="-3">
 				<path>var path = "weblogic/test/${1}/${2}";</path>
 			</to>
-			<move1>
+			<move>
 				<path>var path = "offline/offlineBak/send/${1}/"+getTodayDate()+"/${2}";</path>
-			</move1>
+			</move>
 		</task>
 	</tasks>
 </root>

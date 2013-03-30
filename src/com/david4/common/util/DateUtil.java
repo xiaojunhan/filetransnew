@@ -10,4 +10,8 @@ public class DateUtil {
 		return sdf.format(new Date());
 	}
 
+	public static String format(Date date,String pattern){
+		SimpleDateFormat sdf = new SimpleDateFormat(pattern);
+		return sdf.format(date);
+	}
 }

@@ -21,11 +21,13 @@ import org.springframework.stereotype.Component;
 
 import com.david4.common.filter.MyFTPFileFilter;
 import com.david4.common.model.PathModel;
+import com.david4.common.util.DateUtil;
 import com.david4.common.util.FileUtil;
 import com.david4.common.util.NumberUtil;
 import com.david4.common.util.ScriptUtil;
 import com.david4.filetrans.Constants;
 import com.david4.filetrans.config.TaskConfig;
+import com.david4.filetrans.model.FileInfo;
 import com.david4.filetrans.model.FileTransTaskModel.Delete;
 import com.david4.filetrans.model.FileTransTaskModel.From;
 import com.david4.filetrans.model.FileTransTaskModel.To;
@@ -379,5 +381,94 @@ public class FTPUtil implements FileTransUtil {
 	public static String getTempName(){
 		int random = NumberUtil.getRandom(100000, 999999);
 		return Long.toString(System.nanoTime())+random+"-do-not-delete";
+	}
+
+	@Override
+	public List<FileInfo> getFileInfoList(From from) throws Exception {
+		String path = from.getPath();
+		if(path==null || path.trim().length()==0){
+			throw new Exception("fromPath null,fromPath="+path);
+		}
+		path = ScriptUtil.getString(path, Constants.SCRIPT_PATH);
+		if(path==null || path.trim().length()==0){
+			throw new Exception("fromPath null,fromPath="+path);
+		}
+		FTPClient client = null;
+		try {
+			client = getFtpClient(from.getServerid());
+			return getFileInfoList(path, client);
+		} finally {
+			close(client);
+		}
+	}
+	
+	public static List<FileInfo> getFileInfoList(String path, FTPClient client)
+			throws IOException {
+		List<PathModel> list = FileUtil.getPathSegment(path);
+		return getFileInfoList(list, 0, client);
+	}
+
+	public static List<FileInfo> getFileInfoList(List<PathModel> list, int index,
+			FTPClient client) throws IOException {
+		// 退出
+		if (list == null || index < 0 || index >= list.size()) {
+			return null;
+		}
+		// client.changeWorkingDirectory(rootPath);
+		PathModel pm = list.get(index);
+		// getFile
+		List<FileInfo> pathList = new ArrayList<FileInfo>();
+		if (index == list.size() - 1) {
+			logger.debug("file==pm.getPath()==" + pm.getPath()
+					+ "==pm.getNext()==" + pm.getNext());
+			 
+			FTPFile[] ftpFileArr = client.listFiles(pm.getPath(),
+					new MyFTPFileFilter(pm.getNext()));
+			if (ftpFileArr != null && ftpFileArr.length > 0) {
+				for (FTPFile f : ftpFileArr) {
+					if(f.getName().equals(".")||f.getName().equals("..")){
+						continue;
+					}
+					String name = f.getName();
+					String tempPath = pm.getPath() + "/" + name;
+//					//中文文件名的
+//					tempPath = new String(tempPath.getBytes("UTF-8"),
+//							"ISO-8859-1");
+					FileInfo fileInfo = new FileInfo();
+					fileInfo.setName(tempPath);
+					fileInfo.setSize(f.getSize());
+					fileInfo.setDate(DateUtil.format(f.getTimestamp().getTime(),"yyyy-MM-dd HH:mm:ss"));
+					pathList.add(fileInfo);
+				}
+			}
+			return pathList;
+		}
+		if (index < list.size() - 1) {
+			// get dir
+			logger.debug("dir==pm.getPath()==" + pm.getPath()
+					+ "==pm.getNext()==" + pm.getNext());
+			FTPFile[] ftpFileArr = client.listDirectories(pm.getPath());
+			if (ftpFileArr != null && ftpFileArr.length > 0) {
+				for (FTPFile f : ftpFileArr) {
+					if(f.getName().equals(".")||f.getName().equals("..")){
+						continue;
+					}
+					Pattern p = Pattern.compile("^" + pm.getNext() + "$");
+					Matcher m = p.matcher(f.getName());
+					if (m.find()) {
+						String dirName = f.getName();
+						list.get(index + 1).setPath(
+								pm.getPath() + "/" + dirName);
+						List<FileInfo> tempList = getFileInfoList(list, index + 1,
+								client);
+						if (tempList != null && tempList.size() > 0) {
+							pathList.addAll(tempList);
+						}
+					}
+				}
+			}
+			return pathList;
+		}
+		return null;
 	}
 }

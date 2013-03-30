@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import com.david4.common.model.PathModel;
 import com.david4.common.util.FileUtil;
 import com.david4.filetrans.config.TaskConfig;
+import com.david4.filetrans.model.FileInfo;
 import com.david4.filetrans.model.FileTransTaskModel.Delete;
 import com.david4.filetrans.model.FileTransTaskModel.From;
 import com.david4.filetrans.model.FileTransTaskModel.To;
@@ -126,5 +127,11 @@ public class SFTPUtil implements FileTransUtil{
 		}catch(Exception e){
 			logger.error("disconnect error "+e.getMessage());
 		}
+	}
+
+	@Override
+	public List<FileInfo> getFileInfoList(From from) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

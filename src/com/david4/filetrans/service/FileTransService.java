@@ -16,6 +16,7 @@ import com.david4.console.TaskInfo;
 import com.david4.filetrans.Config;
 import com.david4.filetrans.Constants;
 import com.david4.filetrans.config.TaskConfig;
+import com.david4.filetrans.model.FileInfo;
 import com.david4.filetrans.model.FileTransTaskModel;
 import com.david4.filetrans.model.FileTransTaskModel.Delete;
 import com.david4.filetrans.model.FileTransTaskModel.From;
@@ -155,6 +156,13 @@ public class FileTransService extends BaseService{
 		FileTransUtil fileTransUtil = FileTransUtilFactory.getInstance(type);
 		return fileTransUtil.getPathList(from);
 	}
+	
+	public List<FileInfo> getFileInfoList(From from) throws Exception{
+		String type = from.getType();
+		FileTransUtil fileTransUtil = FileTransUtilFactory.getInstance(type);
+		return fileTransUtil.getFileInfoList(from);
+	}
+	
 	/**
 	 * 文件传输
 	 * @param from

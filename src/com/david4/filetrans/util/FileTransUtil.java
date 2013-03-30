@@ -2,14 +2,16 @@ package com.david4.filetrans.util;
 
 import java.util.List;
 
+import com.david4.filetrans.model.FileInfo;
 import com.david4.filetrans.model.ServerConfig;
 import com.david4.filetrans.model.FileTransTaskModel.Delete;
 import com.david4.filetrans.model.FileTransTaskModel.From;
 import com.david4.filetrans.model.FileTransTaskModel.To;
 
 public interface FileTransUtil {
+	public List<FileInfo> getFileInfoList(From from)throws Exception;
     /**
-     * 文件列表
+     * 文件名列表
      * @param from
      * @return
      */
