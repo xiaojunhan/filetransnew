@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 /**
  * js脚本简单解析
+ * 对ScriptEngine理解不深，有隐患
  * @author hanxj
  *
  */
@@ -53,6 +54,7 @@ public class ScriptUtil {
 	
 	public static void main(String[] args){
 //		init();
+		//engine.createBindings();
 		String script = "var frompath = \"D:/ftp/batch/qcbank/(.*?)/acc/(.*?)\";";
 		script = "var frompathbak = \"D:/ftp/batch/qcbankbak/${1}/acc/${2}\";";
 		script = "var frompath = \"bank/(.*?)/acc/(WXSMK-QC-.*?-\";frompath = frompath+getTodayDate();frompath = frompath+\"(-TZ)?\\..*?)\";";
