@@ -7,14 +7,14 @@
     	</encoder>
     </appender>
     <appender name="File" class="ch.qos.logback.core.FileAppender">
-        <file>E:\workspace\filetrans\log\log-${byDay}.log</file>
+        <file>/home/weblogic/apps/filetrans/log/log-${byDay}.log</file>
         <encoder>
       		<pattern>%date %level [%thread] [%class:%line] %msg%n</pattern>
     	</encoder>
     </appender>
     
     <appender name="SimpleFile" class="ch.qos.logback.core.FileAppender">
-        <file>E:\workspace\filetrans\log\logdb-${byDay}.log</file>
+        <file>/home/weblogic/apps/filetrans/log/logdb-${byDay}.log</file>
         <encoder>
       		<pattern>%date %msg%n</pattern>
     	</encoder>
@@ -28,6 +28,5 @@
         <appender-ref ref="Console"/>
         <appender-ref ref="File"/>
     </root>
-    
 
 </configuration>

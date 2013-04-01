@@ -73,9 +73,14 @@ public class ConsoleController  extends BaseController{
 	 */
 	@RequestMapping(value = "/runtask.jhtml",params={"taskId"})
 	public String runTask(String taskId,Model model,HttpServletRequest request){
-		String tasks = (String)(request.getSession().getAttribute("TASKS"));
+		User user = (User)(request.getSession().getAttribute("USER_INFO"));
+		if(user==null){
+			model.addAttribute(RESULT,"请先登录");
+			return PARAMETER;
+		}
+		String tasks = user.getTasks();
 		if(tasks==null){
-			model.addAttribute(RESULT,"没有权限或登录已过期");
+			model.addAttribute(RESULT,"没有权限");
 			return PARAMETER;
 		}
 		boolean flag = false;

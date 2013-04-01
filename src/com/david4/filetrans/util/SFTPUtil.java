@@ -3,7 +3,6 @@ package com.david4.filetrans.util;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.commons.net.ftp.FTPClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

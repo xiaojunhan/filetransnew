@@ -30,7 +30,8 @@ public class FiletransController  extends BaseController{
 	
 	@RequestMapping(value = "/index.jhtml")
 	public String index(Model model){
-		return "filetrans/index";
+		//User user = (User)(request.getSession().getAttribute("USER_INFO"));
+		return "login";
 	}
 	/**
 	 * 登录
@@ -55,7 +56,7 @@ public class FiletransController  extends BaseController{
 		
 		List<TaskModel> list = new ArrayList<TaskModel>();
 		if(tasks!=null && tasks.trim().length()>0){
-			request.getSession().setAttribute("TASKS", tasks);
+			request.getSession().setAttribute("USER_INFO", user);
 			String[] taskArr = tasks.split(",");
 			if(taskArr!=null && taskArr.length>0){
 				for(String taskId:taskArr){
