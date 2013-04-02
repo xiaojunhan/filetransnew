@@ -14,6 +14,7 @@ import com.david4.common.model.TaskModel;
 import com.david4.console.TaskControl;
 import com.david4.console.TaskInfo;
 import com.david4.console.service.ConsoleService;
+import com.david4.filetrans.config.TaskConfig;
  
 
 public class TaskJob extends QuartzJobBean implements Serializable{
@@ -30,27 +31,26 @@ public class TaskJob extends QuartzJobBean implements Serializable{
 		System.out.println(s.format(d)+"==taskId=="+taskId);
 	}
 	public void dojob(){
-//		String group = "0";
-//		try{
-//			TaskModel task = XmlConfig.getTaskModel(taskId);
-//			task.getGroup();
-//			if(!TaskControl.canRun(taskId)){
-//				TaskInfo.log(group,"#"+taskId+"#该任务在执行中");
-//				return;
-//			}
-//			ConsoleService consoleService = SpringContainer.getBean(ConsoleService.class);
-//			consoleService.doTask(task);
-//			TaskInfo.log(group,"#"+taskId+"#执行成功");
-//			
-//		}catch(TaskNotExsitException e){
-//			TaskInfo.log(group,"#"+taskId+"#"+e.getMessage());
-//		}catch (Exception e) {
-//			TaskInfo.log(group,"#"+taskId+"#执行失败"+e.getMessage());
-//		
-//		}finally{
-//			TaskControl.complete(taskId);
-//		}
-//		return;
+		String group = "0";
+		try{
+			TaskConfig taskConfig =  SpringContainer.getBean("taskConfig",TaskConfig.class);
+			TaskModel task = taskConfig.getTaskModel(taskId);
+			task.getGroup();
+			if(!TaskControl.canRun(taskId)){
+				TaskInfo.log(group,"#"+taskId+"#该任务在执行中");
+				return;
+			}
+			ConsoleService consoleService = SpringContainer.getBean(ConsoleService.class);
+			consoleService.doTask(task);
+			TaskInfo.log(group,"#"+taskId+"#执行成功");
+		}catch(TaskNotExsitException e){
+			TaskInfo.log(group,"#"+taskId+"#"+e.getMessage());
+		}catch (Exception e) {
+			TaskInfo.log(group,"#"+taskId+"#执行失败"+e.getMessage());
+		}finally{
+			TaskControl.complete(taskId);
+		}
+		return;
 	}
 	public String getTaskId() {
 		return taskId;
