@@ -1,2 +1,4 @@
 /webroot/WEB-INF/classes
 /log
+/config/tasks.xml
+/config/user.xml
