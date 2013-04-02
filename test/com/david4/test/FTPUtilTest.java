@@ -6,6 +6,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
+import com.david4.filetrans.model.FileInfo;
 import com.david4.filetrans.model.FileTransTaskModel;
 import com.david4.filetrans.model.FileTransTaskModel.From;
 import com.david4.filetrans.util.FTPUtil;
@@ -30,10 +31,10 @@ public class FTPUtilTest {
 		from.setPath(path);
 		from.setServerid("-1");
 		from.setType("ftp");
-		List<String> list = ftpUtil.getPathList(from);
+		List<FileInfo> list = ftpUtil.getFileInfoList(from);
 		System.out.println("list.size="+list.size());
 		if(list!=null && list.size()>0){
-			for(String s:list){
+			for(FileInfo s:list){
 				System.out.println("test=="+s);
 			}
 		}

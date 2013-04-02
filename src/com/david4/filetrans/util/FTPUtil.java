@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -42,24 +41,24 @@ public class FTPUtil implements FileTransUtil {
 	@Qualifier("taskConfig")
 	private TaskConfig taskConfig;
 
-	@Override
-	public List<String> getPathList(From from) throws Exception {
-		String path = from.getPath();
-		if(path==null || path.trim().length()==0){
-			throw new Exception("fromPath null,fromPath="+path);
-		}
-		path = ScriptUtil.getString(path, Constants.SCRIPT_PATH);
-		if(path==null || path.trim().length()==0){
-			throw new Exception("fromPath null,fromPath="+path);
-		}
-		FTPClient client = null;
-		try {
-			client = getFtpClient(from.getServerid());
-			return getFileList(path, client);
-		} finally {
-			close(client);
-		}
-	}
+//	@Override
+//	public List<String> getPathList(From from) throws Exception {
+//		String path = from.getPath();
+//		if(path==null || path.trim().length()==0){
+//			throw new Exception("fromPath null,fromPath="+path);
+//		}
+//		path = ScriptUtil.getString(path, Constants.SCRIPT_PATH);
+//		if(path==null || path.trim().length()==0){
+//			throw new Exception("fromPath null,fromPath="+path);
+//		}
+//		FTPClient client = null;
+//		try {
+//			client = getFtpClient(from.getServerid());
+//			return getFileList(path, client);
+//		} finally {
+//			close(client);
+//		}
+//	}
 
 	@Override
 	public void delete(Delete delete, String deletePath) {
@@ -90,8 +89,13 @@ public class FTPUtil implements FileTransUtil {
 
 	@Override
 	public void put(To to, String toPath, String localPath) throws Exception {
-		String toPathTemp = toPath.substring(0,toPath.indexOf("/"));
-		toPathTemp = toPathTemp + "/"+getTempName();
+		String toPathTemp = null;
+		if(toPath.indexOf("/")>-1){
+			toPathTemp = toPath.substring(0,toPath.indexOf("/"));
+			toPathTemp = toPathTemp + "/"+getTempName();
+		}else{
+			toPathTemp = getTempName();
+		}
 		FTPClient client = null;
 		FileInputStream fis = null;
 		try {
@@ -133,81 +137,81 @@ public class FTPUtil implements FileTransUtil {
 		}
 	}
 
-	/**
-	 * 获取FTP文件列表 path支持正则表达式
-	 * 如test/offlinefiles/send/(\\d{11})/((FH|SS|SN|SR|ER|BL
-	 * )\\w{34}|(FH|SS|SN|SR|ER|BL)\\w{23})
-	 * 
-	 * @param path
-	 * @param client
-	 * @return
-	 * @throws IOException
-	 */
-	public static List<String> getFileList(String path, FTPClient client)
-			throws IOException {
-		List<PathModel> list = FileUtil.getPathSegment(path);
-		return getFileList(list, 0, client);
-	}
-
-	public static List<String> getFileList(List<PathModel> list, int index,
-			FTPClient client) throws IOException {
-		// 退出
-		if (list == null || index < 0 || index >= list.size()) {
-			return null;
-		}
-		// client.changeWorkingDirectory(rootPath);
-		PathModel pm = list.get(index);
-		// getFile
-		List<String> pathList = new ArrayList<String>();
-		if (index == list.size() - 1) {
-			logger.debug("file==pm.getPath()==" + pm.getPath()
-					+ "==pm.getNext()==" + pm.getNext());
-			 
-			FTPFile[] ftpFileArr = client.listFiles(pm.getPath(),
-					new MyFTPFileFilter(pm.getNext()));
-			if (ftpFileArr != null && ftpFileArr.length > 0) {
-				for (FTPFile f : ftpFileArr) {
-					if(f.getName().equals(".")||f.getName().equals("..")){
-						continue;
-					}
-					String name = f.getName();
-					String tempPath = pm.getPath() + "/" + name;
-					//中文文件名的
-					tempPath = new String(tempPath.getBytes("UTF-8"),
-							"ISO-8859-1");
-					pathList.add(tempPath);
-				}
-			}
-			return pathList;
-		}
-		if (index < list.size() - 1) {
-			// get dir
-			logger.debug("dir==pm.getPath()==" + pm.getPath()
-					+ "==pm.getNext()==" + pm.getNext());
-			FTPFile[] ftpFileArr = client.listDirectories(pm.getPath());
-			if (ftpFileArr != null && ftpFileArr.length > 0) {
-				for (FTPFile f : ftpFileArr) {
-					if(f.getName().equals(".")||f.getName().equals("..")){
-						continue;
-					}
-					Pattern p = Pattern.compile("^" + pm.getNext() + "$");
-					Matcher m = p.matcher(f.getName());
-					if (m.find()) {
-						String dirName = f.getName();
-						list.get(index + 1).setPath(
-								pm.getPath() + "/" + dirName);
-						List<String> tempList = getFileList(list, index + 1,
-								client);
-						if (tempList != null && tempList.size() > 0) {
-							pathList.addAll(tempList);
-						}
-					}
-				}
-			}
-			return pathList;
-		}
-		return null;
-	}
+//	/**
+//	 * 获取FTP文件列表 path支持正则表达式
+//	 * 如test/offlinefiles/send/(\\d{11})/((FH|SS|SN|SR|ER|BL
+//	 * )\\w{34}|(FH|SS|SN|SR|ER|BL)\\w{23})
+//	 * 
+//	 * @param path
+//	 * @param client
+//	 * @return
+//	 * @throws IOException
+//	 */
+//	public static List<String> getFileList(String path, FTPClient client)
+//			throws IOException {
+//		List<PathModel> list = FileUtil.getPathSegment(path);
+//		return getFileList(list, 0, client);
+//	}
+//
+//	public static List<String> getFileList(List<PathModel> list, int index,
+//			FTPClient client) throws IOException {
+//		// 退出
+//		if (list == null || index < 0 || index >= list.size()) {
+//			return null;
+//		}
+//		// client.changeWorkingDirectory(rootPath);
+//		PathModel pm = list.get(index);
+//		// getFile
+//		List<String> pathList = new ArrayList<String>();
+//		if (index == list.size() - 1) {
+//			logger.debug("file==pm.getPath()==" + pm.getPath()
+//					+ "==pm.getNext()==" + pm.getNext());
+//			 
+//			FTPFile[] ftpFileArr = client.listFiles(pm.getPath(),
+//					new MyFTPFileFilter(pm.getNext()));
+//			if (ftpFileArr != null && ftpFileArr.length > 0) {
+//				for (FTPFile f : ftpFileArr) {
+//					if(f.getName().equals(".")||f.getName().equals("..")){
+//						continue;
+//					}
+//					String name = f.getName();
+//					String tempPath = pm.getPath() + "/" + name;
+//					//中文文件名的
+//					tempPath = new String(tempPath.getBytes("UTF-8"),
+//							"ISO-8859-1");
+//					pathList.add(tempPath);
+//				}
+//			}
+//			return pathList;
+//		}
+//		if (index < list.size() - 1) {
+//			// get dir
+//			logger.debug("dir==pm.getPath()==" + pm.getPath()
+//					+ "==pm.getNext()==" + pm.getNext());
+//			FTPFile[] ftpFileArr = client.listDirectories(pm.getPath());
+//			if (ftpFileArr != null && ftpFileArr.length > 0) {
+//				for (FTPFile f : ftpFileArr) {
+//					if(f.getName().equals(".")||f.getName().equals("..")){
+//						continue;
+//					}
+//					Pattern p = Pattern.compile("^" + pm.getNext() + "$");
+//					Matcher m = p.matcher(f.getName());
+//					if (m.find()) {
+//						String dirName = f.getName();
+//						list.get(index + 1).setPath(
+//								pm.getPath() + "/" + dirName);
+//						List<String> tempList = getFileList(list, index + 1,
+//								client);
+//						if (tempList != null && tempList.size() > 0) {
+//							pathList.addAll(tempList);
+//						}
+//					}
+//				}
+//			}
+//			return pathList;
+//		}
+//		return null;
+//	}
 
 	public FTPClient getFtpClient(String serverId) throws Exception {
 		// String serverId = from.getServerid();
@@ -280,7 +284,7 @@ public class FTPUtil implements FileTransUtil {
 		}
 		dir = dir.replaceAll("/+", "/");
 		String sdir = ftp.printWorkingDirectory().replaceAll("\"", "");
-		;
+
 		// 目录已存在，直接返回
 		boolean result = ftp.changeWorkingDirectory(dir);
 		if (result) {
@@ -323,9 +327,10 @@ public class FTPUtil implements FileTransUtil {
 		ftp.changeWorkingDirectory(sdir);
 	}
 
-	public static String getFtpDir(String path)
-			throws UnsupportedEncodingException {
-		// path = getFtpFile(rootPath, path);
+	public static String getFtpDir(String path) {
+		if(path.lastIndexOf("/")==-1){
+			return null;
+		}
 		path = path.substring(0, path.lastIndexOf("/"));
 		return path;
 	}
@@ -431,9 +436,9 @@ public class FTPUtil implements FileTransUtil {
 					}
 					String name = f.getName();
 					String tempPath = pm.getPath() + "/" + name;
-//					//中文文件名的
-//					tempPath = new String(tempPath.getBytes("UTF-8"),
-//							"ISO-8859-1");
+					//中文文件名的
+					tempPath = new String(tempPath.getBytes("UTF-8"),
+							"ISO-8859-1");
 					FileInfo fileInfo = new FileInfo();
 					fileInfo.setName(tempPath);
 					fileInfo.setSize(f.getSize());

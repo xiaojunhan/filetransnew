@@ -7,8 +7,10 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
+import com.david4.filetrans.model.FileInfo;
 import com.david4.filetrans.model.FileTransTaskModel;
 import com.david4.filetrans.model.FileTransTaskModel.From;
+import com.david4.filetrans.model.FileTransTaskModel.To;
 import com.david4.filetrans.util.SFTPUtil;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.ChannelSftp.LsEntry;
@@ -22,9 +24,21 @@ public class SFTPUtilTest {
 	public static void main(String[] args) throws Exception {
 		ApplicationContext context = new FileSystemXmlApplicationContext("webroot/WEB-INF/conf/webControllerContext.xml");
 		
-		getPathListTest(context);
+		//getPathListTest(context);
+		putest(context);
 	}
-
+	public static void putest(ApplicationContext context) throws Exception{
+		SFTPUtil sFTPUtil = context.getBean(SFTPUtil.class);
+		String toPath = "server.xml";
+		String localPath = "E:\\war.zip";
+		localPath = "D:\\ftp\\server.xml";
+		To to = new FileTransTaskModel().new To();
+		to.setServerid("-2");
+		to.setType("sftp");
+		sFTPUtil.put(to, toPath, localPath);
+		
+		System.out.println("====end====");
+	}
 	public static void getPathListTest(ApplicationContext context) throws Exception{
 		SFTPUtil sFTPUtil = context.getBean(SFTPUtil.class);
 		From from = new FileTransTaskModel().new From();
@@ -33,9 +47,9 @@ public class SFTPUtilTest {
 		from.setPath(path);
 		from.setServerid("-2");
 		from.setType("sftp");
-		List<String> list = sFTPUtil.getPathList(from);
+		List<FileInfo> list = sFTPUtil.getFileInfoList(from);
 		if(list!=null && list.size()>0){
-			for(String s:list){
+			for(FileInfo s:list){
 				System.out.println(s);
 			}
 		}
@@ -49,5 +63,9 @@ public class SFTPUtilTest {
 //			System.out.println(en.getAttrs().getMTime());
 //		}
 		//
+	}
+	
+	public void mkdir(){
+		
 	}
 }

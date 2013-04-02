@@ -52,14 +52,15 @@ public class FileTransService extends BaseService{
 			throw new Exception("fromPath null,fromPath="+fromPathTemp);
 		}
 		
-		List<String> list= getPathList(from);
+		List<FileInfo> list= getFileInfoList(from);
 		if(list==null || list.size()==0){
 			throw new FromFileEmptyException("from file empty");
 		}
 		//doto
 		List<To> toList = taskModel.getTo();
 		if(toList!=null && toList.size()>0){
-			for(String fromPath:list){
+			for(FileInfo fileInfo:list){
+				String fromPath = fileInfo.getName();
 				String tempFileName = getTempFileName();
 				String localPath = getLOCAL_PATH_TEMP()+tempFileName;
 				//下载到本地
@@ -111,7 +112,8 @@ public class FileTransService extends BaseService{
 		if(move!=null){
 			String movePath = move.getPath();
 			if(movePath!=null && movePath.trim().length()>0){
-				for(String fromPath:list){
+				for(FileInfo fileInfo:list){
+					String fromPath = fileInfo.getName();
 					String movePathTemp = getToPath(fromPath, movePath, fromPathTemp);
 					try{
 						move(from, fromPath, movePathTemp);
@@ -151,11 +153,11 @@ public class FileTransService extends BaseService{
 	 * @return
 	 * @throws Exception 
 	 */
-	public List<String> getPathList(From from) throws Exception{
-		String type = from.getType();
-		FileTransUtil fileTransUtil = FileTransUtilFactory.getInstance(type);
-		return fileTransUtil.getPathList(from);
-	}
+//	public List<FileInfo> getFileInfoList(From from) throws Exception{
+//		String type = from.getType();
+//		FileTransUtil fileTransUtil = FileTransUtilFactory.getInstance(type);
+//		return fileTransUtil.getFileInfoList(from);
+//	}
 	
 	public List<FileInfo> getFileInfoList(From from) throws Exception{
 		String type = from.getType();

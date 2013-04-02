@@ -2,6 +2,7 @@ package com.david4.filetrans.util;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.Vector;
@@ -15,7 +16,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import com.david4.common.model.PathModel;
+import com.david4.common.util.DateUtil;
 import com.david4.common.util.FileUtil;
+import com.david4.common.util.NumberUtil;
 import com.david4.common.util.ScriptUtil;
 import com.david4.filetrans.Constants;
 import com.david4.filetrans.config.TaskConfig;
@@ -41,7 +44,7 @@ public class SFTPUtil implements FileTransUtil {
 	private TaskConfig taskConfig;
 
 	@Override
-	public List<String> getPathList(From from) throws Exception {
+	public List<FileInfo> getFileInfoList(From from) throws Exception {
 		String path = from.getPath();
 		if (path == null || path.trim().length() == 0) {
 			throw new Exception("fromPath null,fromPath=" + path);
@@ -53,7 +56,7 @@ public class SFTPUtil implements FileTransUtil {
 		ChannelSftp client = null;
 		try {
 			client = getChannelSftp(from.getServerid());
-			return getFileList(path, client);
+			return getFileInfoList(path, client);
 		} finally {
 			close(client);
 		}
@@ -79,10 +82,34 @@ public class SFTPUtil implements FileTransUtil {
 
 	@Override
 	public void put(To to, String toPath, String localPath) throws Exception {
+		String toPathTemp = null;
+		if(toPath.indexOf("/")>-1){
+			toPathTemp = toPath.substring(0,toPath.indexOf("/"));
+			toPathTemp = toPathTemp + "/"+getTempName();
+		}else{
+			toPathTemp = getTempName();
+		}
 		ChannelSftp client = null;
 		try {
 			client = getChannelSftp(to.getServerid());
-			client.put(localPath, toPath);
+			mkdirs(getFtpDir(toPath), client);
+			client.put(localPath, toPathTemp);
+			try{
+				client.rename(toPathTemp, toPath);
+			}catch(SftpException e){
+				try{
+					client.rm(toPath);
+					try{
+						client.rename(toPathTemp, toPath);
+					}catch(SftpException e1){
+						client.rm(toPathTemp);
+						throw new Exception("rename error");
+					}
+				}catch(SftpException e1){
+					client.rm(toPathTemp);
+					throw new Exception("delete error");
+				}
+			}
 		} finally {
 			close(client);
 		}
@@ -94,28 +121,40 @@ public class SFTPUtil implements FileTransUtil {
 		ChannelSftp client = null;
 		try {
 			client = getChannelSftp(serverConfig);
-			client.rename(fromPath, toPath);
+			try{
+				client.rename(fromPath, toPath);
+			}catch(SftpException e){
+				try{
+					client.rm(toPath);
+					try{
+						client.rename(fromPath, toPath);
+					}catch(SftpException e1){
+						throw new Exception("move rename error");
+					}
+				}catch(SftpException e1){
+					throw new Exception("move delete error");
+				}
+			}
 		} finally {
 			close(client);
 		}
 	}
 
-	public List<String> getFileList(String path, ChannelSftp client)
+	public List<FileInfo> getFileInfoList(String path, ChannelSftp client)
 			throws IOException, SftpException {
 		List<PathModel> list = FileUtil.getPathSegment(path);
-		return getFileList(list, 0, client);
+		return getFileInfoList(list, 0, client);
 	}
 
-	public static List<String> getFileList(List<PathModel> list, int index,
+	public static List<FileInfo> getFileInfoList(List<PathModel> list, int index,
 			ChannelSftp client) throws IOException, SftpException {
 		// 退出
 		if (list == null || index < 0 || index >= list.size()) {
 			return null;
 		}
-		// client.changeWorkingDirectory(rootPath);
 		PathModel pm = list.get(index);
 		// getFile
-		List<String> pathList = new ArrayList<String>();
+		List<FileInfo> pathList = new ArrayList<FileInfo>();
 		if (index == list.size() - 1) {
 			logger.info("file==pm.getPath()==" + pm.getPath()
 					+ "==pm.getNext()==" + pm.getNext());
@@ -135,7 +174,12 @@ public class SFTPUtil implements FileTransUtil {
 						// 中文文件名的
 						tempPath = new String(tempPath.getBytes("UTF-8"),
 								"ISO-8859-1");
-						pathList.add(tempPath);
+						FileInfo fileInfo = new FileInfo();
+						fileInfo.setName(tempPath);
+						fileInfo.setSize(entry.getAttrs().getSize());
+						Date d = new Date(entry.getAttrs().getMTime());
+						fileInfo.setDate(DateUtil.format(d,"yyyy-MM-dd HH:mm:ss"));
+						pathList.add(fileInfo);
 					}
 				}
 			}
@@ -159,7 +203,7 @@ public class SFTPUtil implements FileTransUtil {
 						String dirName = entry.getFilename();
 						list.get(index + 1).setPath(
 								pm.getPath() + "/" + dirName);
-						List<String> tempList = getFileList(list, index + 1,
+						List<FileInfo> tempList = getFileInfoList(list, index + 1,
 								client);
 						if (tempList != null && tempList.size() > 0) {
 							pathList.addAll(tempList);
@@ -181,7 +225,7 @@ public class SFTPUtil implements FileTransUtil {
 		return client;
 	}
 
-	public ChannelSftp getChannelSftp(ServerConfig ftpconfig) {
+	public ChannelSftp getChannelSftp(ServerConfig ftpconfig) throws Exception{
 		if (ftpconfig == null) {
 			logger.warn("ftpconfig is null");
 			return null;
@@ -191,9 +235,8 @@ public class SFTPUtil implements FileTransUtil {
 	}
 
 	public ChannelSftp getChannelSftp(String host, int port, String username,
-			String password) {
-		ChannelSftp sftp = null;
-		try {
+			String password)throws Exception {
+			ChannelSftp sftp = null;
 			JSch jsch = new JSch();
 			jsch.getSession(username, host, port);
 			Session sshSession = jsch.getSession(username, host, port);
@@ -205,9 +248,6 @@ public class SFTPUtil implements FileTransUtil {
 			Channel channel = sshSession.openChannel("sftp");
 			channel.connect();
 			sftp = (ChannelSftp) channel;
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 		return sftp;
 	}
 
@@ -220,10 +260,70 @@ public class SFTPUtil implements FileTransUtil {
 			logger.error("disconnect error " + e.getMessage());
 		}
 	}
+	public static String getFtpDir(String path) {
+		if(path.lastIndexOf("/")==-1){
+			return null;
+		}
+		path = path.substring(0, path.lastIndexOf("/"));
+		return path;
+	}
+	public static String getTempName(){
+		int random = NumberUtil.getRandom(100000, 999999);
+		return Long.toString(System.nanoTime())+random+"-do-not-delete";
+	}
+	
+	public static void mkdirs(String dir, ChannelSftp ftp) throws IOException, SftpException {
+		if (dir == null) {
+			return;
+		}
+		dir = dir.replaceAll("/+", "/");
+		String sdir = ftp.pwd().replaceAll("\"", "");
 
-	@Override
-	public List<FileInfo> getFileInfoList(From from) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+		// 目录已存在，直接返回
+		try{
+			ftp.cd(dir);
+			ftp.cd(sdir);
+			return;
+		}catch(SftpException e){
+			
+		}
+
+		ftp.cd(sdir);
+		if (!dir.endsWith("/")) {
+			dir = dir + "/";
+		}
+		int start = 0;
+		int end = 0;
+		if (dir.startsWith("/")) {
+			start = 1;
+		} else {
+			start = 0;
+		}
+		end = dir.indexOf("/", start);
+		while (true) {
+			if (end <= start) {
+				ftp.cd(sdir);
+				break;
+			}
+			String temp = dir.substring(start, end);
+			try{
+				ftp.cd(temp);
+			}catch(SftpException e){
+				try{
+					ftp.mkdir(temp);
+					ftp.cd(temp);
+				}catch(SftpException e1){
+					ftp.cd(sdir);
+					throw new IOException("创建目录失败,确定用户是否有创建目录的权限,dir=" + dir);
+				}
+			}
+			start = end + 1;
+			end = dir.indexOf("/", start);
+			if (end <= start) {
+				ftp.cd(sdir);
+				break;
+			}
+		}
+		ftp.cd(sdir);
 	}
 }
