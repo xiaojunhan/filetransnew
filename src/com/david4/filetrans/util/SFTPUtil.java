@@ -1,10 +1,12 @@
 package com.david4.filetrans.util;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
+import java.util.TimeZone;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -16,7 +18,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import com.david4.common.model.PathModel;
-import com.david4.common.util.DateUtil;
 import com.david4.common.util.FileUtil;
 import com.david4.common.util.NumberUtil;
 import com.david4.common.util.ScriptUtil;
@@ -121,6 +122,7 @@ public class SFTPUtil implements FileTransUtil {
 		ChannelSftp client = null;
 		try {
 			client = getChannelSftp(serverConfig);
+			mkdirs(getFtpDir(toPath), client);
 			try{
 				client.rename(fromPath, toPath);
 			}catch(SftpException e){
@@ -177,8 +179,11 @@ public class SFTPUtil implements FileTransUtil {
 						FileInfo fileInfo = new FileInfo();
 						fileInfo.setName(tempPath);
 						fileInfo.setSize(entry.getAttrs().getSize());
-						Date d = new Date(entry.getAttrs().getMTime());
-						fileInfo.setDate(DateUtil.format(d,"yyyy-MM-dd HH:mm:ss"));
+//						System.out.println(entry.getAttrs().getATime() +"==="+entry.getAttrs().getMTime());
+//						System.out.println(entry.getAttrs().getAtimeString() +"==="+entry.getAttrs().getMtimeString());
+//						Date d = new Date(entry.getAttrs().getMTime());
+					//	fileInfo.setDate(DateUtil.format(d,"yyyy-MM-dd HH:mm:ss"));
+						fileInfo.setDate(formatDate(entry.getAttrs().getMtimeString()));
 						pathList.add(fileInfo);
 					}
 				}
@@ -325,5 +330,21 @@ public class SFTPUtil implements FileTransUtil {
 			}
 		}
 		ftp.cd(sdir);
+	}
+	
+	public static String formatDate(String s){
+		java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy",Locale.US);
+        try {
+            TimeZone tz=TimeZone.getTimeZone("US/Central");
+            sdf.setTimeZone(tz);
+            java.util.Date date= sdf.parse(s);
+            SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            format1.setTimeZone(TimeZone.getTimeZone("GMT-6:00"));
+            return format1.format(date);
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
 	}
 }

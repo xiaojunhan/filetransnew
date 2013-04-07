@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -442,7 +443,9 @@ public class FTPUtil implements FileTransUtil {
 					FileInfo fileInfo = new FileInfo();
 					fileInfo.setName(tempPath);
 					fileInfo.setSize(f.getSize());
-					fileInfo.setDate(DateUtil.format(f.getTimestamp().getTime(),"yyyy-MM-dd HH:mm:ss"));
+					Calendar c = f.getTimestamp();
+					c.add(Calendar.HOUR, 8);
+					fileInfo.setDate(DateUtil.format(c.getTime(),"yyyy-MM-dd HH:mm:ss"));
 					pathList.add(fileInfo);
 				}
 			}
