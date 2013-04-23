@@ -41,7 +41,7 @@ public class FiletransController  extends BaseController{
 	 * @param request
 	 * @return
 	 */
-	@RequestMapping(value = "/login.jhtml")
+	@RequestMapping(value = "/login.jhtml",params={"name","password"})
 	public String login(String name,String password,Model model,HttpServletRequest request){
 		User user = userDao.getUser(name);
 		if(user == null){
