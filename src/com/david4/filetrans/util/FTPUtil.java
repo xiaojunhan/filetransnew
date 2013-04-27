@@ -1,5 +1,6 @@
 package com.david4.filetrans.util;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -99,12 +100,18 @@ public class FTPUtil implements FileTransUtil {
 		}
 		FTPClient client = null;
 		FileInputStream fis = null;
+		BufferedInputStream bis = null;
 		try {
 			client = getFtpClient(to.getServerid());
 			mkdirs(getFtpDir(toPath), client);
 			File file = new File(localPath);
 			fis = new FileInputStream(file);
-			boolean b = client.storeFile(toPathTemp, fis);
+			bis = new BufferedInputStream(fis);
+			client.setFileType(FTPClient.BINARY_FILE_TYPE);
+			client.setBufferSize(1024*1024);
+			logger.debug("上传开始==="+DateUtil.getDate("yyyy-MM-dd HH:mm:ss SSS"));
+			boolean b = client.storeFile(toPathTemp, bis);
+			logger.debug("上传结束==="+DateUtil.getDate("yyyy-MM-dd HH:mm:ss SSS"));
 			if (!b) {
 				throw new Exception("storeFile error");
 			}
@@ -127,6 +134,11 @@ public class FTPUtil implements FileTransUtil {
 				}
 			}
 		} finally {
+			if(bis!=null){
+				try{
+					bis.close();
+				}catch(Exception e){}
+			}
 			try {
 				if(fis!=null){
 					fis.close();
@@ -465,8 +477,11 @@ public class FTPUtil implements FileTransUtil {
 					Matcher m = p.matcher(f.getName());
 					if (m.find()) {
 						String dirName = f.getName();
-						list.get(index + 1).setPath(
-								pm.getPath() + "/" + dirName);
+//						if("".equals(pm.getPath())){
+//							list.get(index + 1).setPath(dirName);
+//						}else{
+						    list.get(index + 1).setPath(pm.getPath() + "/" + dirName);
+//						}
 						List<FileInfo> tempList = getFileInfoList(list, index + 1,
 								client);
 						if (tempList != null && tempList.size() > 0) {
